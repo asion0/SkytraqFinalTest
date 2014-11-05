@@ -19,8 +19,12 @@ namespace FinalTestV8
         public string[] DutsPort = new string[TesterDut];
         //Param for V815 Test
         public int v815SnrBoundU = 45;
-        public int v815SnrBoundL = 45;
+        public int v815SnrBoundL = 40;
         public int v815TestDuration = 10;
+        //Param for V816 Test
+        public int v816SnrBoundU = 45;
+        public int v816SnrBoundL = 40;
+        public int v816TestDuration = 10;
 
         private enum ErrorCode
         {
@@ -50,6 +54,16 @@ namespace FinalTestV8
                 v815SnrBoundL = Convert.ToInt32(temp.ToString());
                 n = GetPrivateProfileString("V815", "TEST_DURATION", "10", temp, 255, path);
                 v815TestDuration = Convert.ToInt32(temp.ToString());
+            }
+
+            if (Program.module == "V816")
+            {
+                n = GetPrivateProfileString("V816", "SNR_U_BOUND", "45", temp, 255, path);
+                v816SnrBoundU = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V816", "SNR_L_BOUND", "40", temp, 255, path);
+                v816SnrBoundL = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V816", "TEST_DURATION", "10", temp, 255, path);
+                v816TestDuration = Convert.ToInt32(temp.ToString());
             }
 
             string session = "Site" + siteNo.ToString("D2");

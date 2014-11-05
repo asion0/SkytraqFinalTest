@@ -5,6 +5,8 @@ using System.Threading;
 using SocketDemo;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace SkytraqFinalTestServer
 {
@@ -109,6 +111,60 @@ namespace SkytraqFinalTestServer
             return InitSite(cd);
         }
 
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
+        private static extern int GetPrivateProfileString(string section,
+            string key, string def, StringBuilder retVal, int size, string filePath);
+
+        private bool DoCheckIniCrc(UInt32 crc)
+        {
+            const int MaxReadLength = 512;
+            StringBuilder temp = new StringBuilder(MaxReadLength);
+
+            String path = Environment.CurrentDirectory + "\\prom.ini";
+            if (0 == GetPrivateProfileString("Firmware", "CRC", "", temp, MaxReadLength, path))
+            {
+                return false;
+            }
+            UInt32 iniCrc = Convert.ToUInt32(temp.ToString(), 16);
+
+            return crc == iniCrc;
+        }
+
+        private bool DoCheckPromCrc(UInt32 crc)
+        {
+            const int MaxReadLength = 512;
+            StringBuilder temp = new StringBuilder(MaxReadLength);
+
+            String path = Environment.CurrentDirectory + "\\prom.ini";
+            if (0 == GetPrivateProfileString("Firmware", "Prom", "", temp, MaxReadLength, path))
+            {
+                return false;
+            }
+
+            int promCrc = 0;
+            try
+            {
+                string filename = Environment.CurrentDirectory + "\\" + temp.ToString(); //
+                var fs = new FileStream(filename, FileMode.Open);
+                var len = (int)fs.Length;
+
+                for (int i = 0; i < 0x80000 * 2; ++i)
+                {
+                    if (i < len)
+                        promCrc += fs.ReadByte();
+                    else
+                        promCrc += 0xff;
+                    promCrc &= 0xffff;
+                }
+                fs.Close();
+            }
+            catch
+            {
+                return false;
+            }
+            return crc == promCrc;
+        }
+
         private bool DoWork(ref CmdData cd)
         {
             if (ServerForm.noTestValue)
@@ -137,11 +193,17 @@ namespace SkytraqFinalTestServer
                 string value = "T ";
                 switch (cd.cmdType)
                 {
+                    case CmdData.CmdType.Set1_Start:
+                        value = "R ";       //V816 Set1 Test
+                        break;
+                    case CmdData.CmdType.Set2_Start:
+                        value = "S ";       //V816 Set2 Test
+                        break;
                     case CmdData.CmdType.Test_Start:
-                        value = "T ";
+                        value = "T ";       //Normal Test V815, V822 Test
                         break;
                     case CmdData.CmdType.Load_Start:
-                        value = "L ";
+                        value = "L ";       //Download Firmware, V822
                         break;
                     default:
                         break;
@@ -242,18 +304,22 @@ namespace SkytraqFinalTestServer
             }
         }
 
+        //private static UInt32 crc = 0;
+        //private static bool setCrc = false;
         public string DoCommand(string cmd, object tcp)
         {
             AddMessage("Received command " + cmd);
 
             CmdData cd = ParsingCmd(cmd);
             string retCmd = "";
+            WorkerReportParam r = new WorkerReportParam();
+
             switch (cd.cmdType)
             {
                 case CmdData.CmdType.Initial:
                     if(DoInitial(ref cd))
                     {
-                        cd.cmdType = CmdData.CmdType.Err1;
+                        cd.cmdType = CmdData.CmdType.Err01;
                         retCmd = GetReturnCommand(cd);
                     }
                     else
@@ -262,11 +328,42 @@ namespace SkytraqFinalTestServer
                         retCmd = GetReturnCommand(cd);
                     }
                     break;
-                case CmdData.CmdType.Test_Start:
-
+                case CmdData.CmdType.Set1_Start:
                     if (DoWork(ref cd))
                     {
                         cd.cmdType = CmdData.CmdType.Err2;
+                        retCmd = GetReturnCommand(cd);
+                    }
+                    else
+                    {
+                        cd.cmdType = CmdData.CmdType.Set1_End;
+                        retCmd = GetReturnCommand(cd);
+                        if (ServerForm.noAckValue)
+                        {
+                            retCmd = "";
+                        }
+                    }
+                    break;
+                case CmdData.CmdType.Set2_Start:
+                    if (DoWork(ref cd))
+                    {
+                        cd.cmdType = CmdData.CmdType.Err3;
+                        retCmd = GetReturnCommand(cd);
+                    }
+                    else
+                    {
+                        cd.cmdType = CmdData.CmdType.Set2_End;
+                        retCmd = GetReturnCommand(cd);
+                        if (ServerForm.noAckValue)
+                        {
+                            retCmd = "";
+                        }
+                    }
+                    break;
+                case CmdData.CmdType.Test_Start:
+                    if (DoWork(ref cd))
+                    {
+                        cd.cmdType = CmdData.CmdType.Err02;
                         retCmd = GetReturnCommand(cd);
                     }
                     else
@@ -280,10 +377,9 @@ namespace SkytraqFinalTestServer
                     }
                     break;
                 case CmdData.CmdType.Load_Start:
-
                     if (DoWork(ref cd))
                     {
-                        cd.cmdType = CmdData.CmdType.Err3;
+                        cd.cmdType = CmdData.CmdType.Err03;
                         retCmd = GetReturnCommand(cd);
                     }
                     else
@@ -296,8 +392,101 @@ namespace SkytraqFinalTestServer
                         }
                     }
                     break;
+                case CmdData.CmdType.Testmode:
+                    if (cd.setCrc)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowCrc;
+                        r.output = cd.crc.ToString("X4");
+                        ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                        if (DoCheckIniCrc(cd.crc))
+                        {
+                            r.reportType = WorkerReportParam.ReportType.DisplayMode;
+                            r.output = "Testing mode ready";
+                        }
+                        else
+                        {
+                            cd.cmdType = CmdData.CmdType.Err01;
+                            r.reportType = WorkerReportParam.ReportType.DisplayError;
+                            r.output = "Testing mode ini CRC error!";
+                        }
+                    }
+                    else
+                    {   //Must send CRC_ before this command
+                        cd.cmdType = CmdData.CmdType.Err01;
+                        r.reportType = WorkerReportParam.ReportType.DisplayError;
+                        r.output = "Testing mode no CRC information!";
+                    }
+                    ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                    retCmd = GetReturnCommand(cd);
+                    break;
+                case CmdData.CmdType.Download:
+                    if (cd.setCrc)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowCrc;
+                        r.output = cd.crc.ToString("X4");
+                        ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                        if (!DoCheckIniCrc(cd.crc))
+                        {
+                            cd.cmdType = CmdData.CmdType.Err02;
+                            r.reportType = WorkerReportParam.ReportType.DisplayError;
+                            r.output = "Download mode ini CRC error!";
+                        }
+                        else if(!DoCheckPromCrc(cd.crc))
+                        {
+                            cd.cmdType = CmdData.CmdType.Err02;
+                            r.reportType = WorkerReportParam.ReportType.DisplayError;
+                            r.output = "Download mode bin CRC error!";
+                        }
+                        else
+                        {
+                            r.reportType = WorkerReportParam.ReportType.DisplayMode;
+                            r.output = "Download mode ready";
+                        }
+                    }
+                    else
+                    {   //Must send CRC_ before this command
+                        cd.cmdType = CmdData.CmdType.Err02;
+                        r.reportType = WorkerReportParam.ReportType.DisplayError;
+                        r.output = "Download mode no CRC information!";
+                    }
+                    ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                    retCmd = GetReturnCommand(cd);
+                    break;
+                case CmdData.CmdType.LoadTest:
+                    if (cd.setCrc)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowCrc;
+                        r.output = cd.crc.ToString("X4");
+                        ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                         if (!DoCheckIniCrc(cd.crc))
+                        {
+                            cd.cmdType = CmdData.CmdType.Err03;
+                            r.reportType = WorkerReportParam.ReportType.DisplayError;
+                            r.output = "Download+Testing mode ini CRC error!";
+                        }
+                        else if(!DoCheckPromCrc(cd.crc))
+                        {
+                            cd.cmdType = CmdData.CmdType.Err03;
+                            r.reportType = WorkerReportParam.ReportType.DisplayError;
+                            r.output = "Download+Testing mode bin CRC error!";
+                        }
+                        else
+                        {
+                            r.reportType = WorkerReportParam.ReportType.DisplayMode;
+                            r.output = "Download+Testing mode ready";
+                        }                    
+                    }
+                    else 
+                    {   //Must send CRC_ before this command
+                        cd.cmdType = CmdData.CmdType.Err03;
+                        r.reportType = WorkerReportParam.ReportType.DisplayError;
+                        r.output = "Download+Testing mode no CRC information!";
+                    }
+                    ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
+                    retCmd = GetReturnCommand(cd);
+                    break;              
                 default:
-                    cd.cmdType = CmdData.CmdType.Err1;
+                    cd.cmdType = CmdData.CmdType.Err01;
                     return GetReturnCommand(cd);
             }
 
@@ -309,7 +498,9 @@ namespace SkytraqFinalTestServer
         {
             String cmd;
 
-            if (cd.cmdType == CmdData.CmdType.Ready || 
+            if (cd.cmdType == CmdData.CmdType.Ready ||
+                cd.cmdType == CmdData.CmdType.Set1_End ||
+                cd.cmdType == CmdData.CmdType.Set2_End ||
                 cd.cmdType == CmdData.CmdType.Test_End ||
                 cd.cmdType == CmdData.CmdType.Load_End)
             {
@@ -320,12 +511,29 @@ namespace SkytraqFinalTestServer
                     cd.Siteno.ToString("D2") + " " + dutResult +
                     "+";
             }
-            else if (cd.cmdType == CmdData.CmdType.Err1 || 
+            else if (cd.cmdType == CmdData.CmdType.Err01 || 
+                    cd.cmdType == CmdData.CmdType.Err02 ||
+                    cd.cmdType == CmdData.CmdType.Err03 ||
+                    cd.cmdType == CmdData.CmdType.Err04 ||
+                    cd.cmdType == CmdData.CmdType.Err1 ||
                     cd.cmdType == CmdData.CmdType.Err2 ||
-                    cd.cmdType == CmdData.CmdType.Err3)
+                    cd.cmdType == CmdData.CmdType.Err3 ||
+                    cd.cmdType == CmdData.CmdType.Err4)
             {
                 cmd = "@" + cd.module + " " + cd.cmdType.ToString() + " " +
                     cd.Siteno.ToString("D2") + "+";
+            }
+            else if (cd.cmdType == CmdData.CmdType.CRC_)
+            {
+                cmd = "@" + cd.module + " " + cd.cmdType.ToString() + cd.crc.ToString("X4") + " " +
+                    cd.Siteno.ToString("D2") + " " + cd.duts + "+";
+            }
+            else if (cd.cmdType == CmdData.CmdType.Testmode ||
+                    cd.cmdType == CmdData.CmdType.Download ||
+                    cd.cmdType == CmdData.CmdType.LoadTest)
+            {
+                cmd = "@" + cd.module + " " + cd.cmdType.ToString() + " " +
+                    cd.Siteno.ToString("D2") + " " + cd.duts + "+";
             }
             else
             {
@@ -354,17 +562,34 @@ namespace SkytraqFinalTestServer
                 Test_End,
                 Load_Start,
                 Load_End,
+                CRC_,
+                Testmode,
+                Download,
+                LoadTest,
+                Set1_Start,
+                Set1_End,
+                Set2_Start,
+                Set2_End,
                 Ready,
+                Err01,
+                Err02,
+                Err03,
+                Err04,
                 Err1,
                 Err2,
-                Err3
+                Err3,
+                Err4
             };
 
             public int Siteno = -1;
+            public bool setCrc = false;
+            public UInt32 crc = 0;
             public String duts;
             public String module;
             public CmdType cmdType = CmdType.Unknown;
+
         }
+
         private CmdData ParsingCmd(string cmd)
         {
             CmdData cd = new CmdData();
@@ -405,6 +630,14 @@ namespace SkytraqFinalTestServer
             {
                 cd.cmdType = CmdData.CmdType.Initial;
             }
+            else if (param[1].StartsWith("Set1_Start"))
+            {
+                cd.cmdType = CmdData.CmdType.Set1_Start;
+            }
+            else if (param[1].StartsWith("Set2_Start"))
+            {
+                cd.cmdType = CmdData.CmdType.Set2_Start;
+            }
             else if (param[1] == "Test_Start")
             {
                 cd.cmdType = CmdData.CmdType.Test_Start;
@@ -417,6 +650,60 @@ namespace SkytraqFinalTestServer
             {
                 cd.cmdType = CmdData.CmdType.Test_End;
             }
+            else if (param[1].StartsWith("CRC_"))
+            {
+                cd.cmdType = CmdData.CmdType.CRC_;
+                try
+                {
+                    cd.crc = Convert.ToUInt32(param[1].Substring(param[1].Length - 4, 4), 16);
+                    cd.setCrc = true;
+                }
+                catch
+                {
+                    cd.setCrc = false;
+                }
+            }
+            else if (param[1].StartsWith("Testmode_CRC_"))
+            {
+                cd.cmdType = CmdData.CmdType.Testmode;
+                try
+                {
+                    cd.crc = Convert.ToUInt32(param[1].Substring(param[1].Length - 4, 4), 16);
+                    cd.setCrc = true;
+                }
+                catch
+                {
+                    cd.setCrc = false;
+                }
+            }
+            else if (param[1].StartsWith("Download_CRC_"))
+            {
+                cd.cmdType = CmdData.CmdType.Download;
+                try
+                {
+                    cd.crc = Convert.ToUInt32(param[1].Substring(param[1].Length - 4, 4), 16);
+                    cd.setCrc = true;
+                }
+                catch
+                {
+                    cd.setCrc = false;
+                }
+            }
+            else if (param[1].StartsWith("LoadTest_CRC_"))
+            {
+                cd.cmdType = CmdData.CmdType.LoadTest;
+                try
+                {
+                    cd.crc = Convert.ToUInt32(param[1].Substring(param[1].Length - 4, 4), 16);
+                    cd.setCrc = true;
+                }
+                catch
+                {
+                    cd.setCrc = false;
+                }
+            }
+
+
             if (cd.cmdType == CmdData.CmdType.Unknown)
             {
                 AddMessage("Error : Unknown command");
@@ -456,16 +743,6 @@ namespace SkytraqFinalTestServer
                 if (cd.duts[i] != '0' && cd.duts[i] != '1')
                 {
                     AddMessage("Error : Invalid duts");
-                    cd.cmdType = CmdData.CmdType.Unknown;
-                    return cd;
-                }
-            }
-
-            if (param[0] == "V822")
-            {
-                if (!System.IO.File.Exists(Environment.CurrentDirectory + "\\prom.ini"))
-                {
-                    AddMessage("Error : Can't find file [prom.ini]");
                     cd.cmdType = CmdData.CmdType.Unknown;
                     return cd;
                 }

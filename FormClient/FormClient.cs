@@ -18,24 +18,16 @@ namespace FormClient
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            serverIp.Text = "192.168.0.69";
-            comboBox1.Text = "@V822 Initial 15 00001111+";
-            comboBox1.Items.Add("@V822 Test_Start 15 00001111+");
-            comboBox1.Items.Add("@V822 Load_Start 15 00001111+");
-            comboBox1.Items.Add("@V821 Initial 00 00000000+");
-            comboBox1.Items.Add("@V821 Initial 15 00001111+");
-            comboBox1.Items.Add("@V815 Initial 15 00001111+");
-            comboBox1.Items.Add("@V821 Test_Start 15 00001111+");
-            comboBox1.Items.Add("@V815 Test_Start 15 00001111+");
-            comboBox1.Items.Add("@V821 Test_Start 15 00000001+");
-            comboBox1.Items.Add("@V821 Initial 00 11111111+");
-            comboBox1.Items.Add("@V821 Test_Start 00 11111111+");
-            comboBox1.Items.Add("@V821 Initial 01 00001111+");
-            comboBox1.Items.Add("@V821 Test_Start 01 00001111+");
+            serverIp.Text = "192.168.0.68";
+            comboBox1.Text = "@V816 Set1_Start 15 00001111+";
+            comboBox1.Items.Add("@V816 Initial 15 00001111+");
+            comboBox1.Items.Add("@V816 Set1_Start2 15 00001111+");
+            comboBox1.Items.Add("@V816 Download_CRC_4BC0 15 00001111+");
+            comboBox1.Items.Add("@V816 Download_CRC_4BC1 15 00001111+");
+            comboBox1.Items.Add("@V816 LoadTest_CRC_4BC0 15 00001111+");
+            comboBox1.Items.Add("@V816 LoadTest_CRC_4BC1 15 00001111+");
 
-
-
-            close.Enabled = false;
+                        close.Enabled = false;
             connect.Enabled = false;
             send.Enabled = true;
 

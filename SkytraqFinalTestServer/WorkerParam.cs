@@ -57,7 +57,10 @@ namespace SkytraqFinalTestServer
             ShowIP,
             AllTaskFinished,
             GotMessage,
-
+            ShowCrc,
+            CrcError,
+            DisplayMode,
+            DisplayError
         }
 
         public WorkerReportParam()

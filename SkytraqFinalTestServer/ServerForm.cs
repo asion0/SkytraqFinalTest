@@ -74,6 +74,26 @@ namespace SkytraqFinalTestServer
             {
                 AddConsoleMessage(r.output);
             }
+            else if (r.reportType == WorkerReportParam.ReportType.CrcError)
+            {
+                crcValue.Text = "####";
+                crcValue.ForeColor = Color.Red;
+            }
+            else if (r.reportType == WorkerReportParam.ReportType.ShowCrc)
+            {
+                crcValue.Text = r.output;
+                crcValue.ForeColor = Color.Blue;
+            }
+            else if (r.reportType == WorkerReportParam.ReportType.DisplayMode)
+            {
+                workingMode.Text = r.output;
+                workingMode.ForeColor = Color.Blue;
+            }
+            else if (r.reportType == WorkerReportParam.ReportType.DisplayError)
+            {
+                workingMode.Text = r.output;
+                workingMode.ForeColor = Color.Red;
+            }
         }
 
         //執行完成

@@ -42,6 +42,10 @@ using System.Runtime.InteropServices;
 // 1.0.0.011 - Support V815 read test setting from SiteProfile.ini.
 // 1.0.0.012 - Fix V822 IO Test srec GPIO 3 fail issue.
 // 1.0.0.013 - Display Module name and prom file in Test UI.
+// 1.0.0.014 - New UI and protocol from Hilo.
+// 1.0.0.015 - New protocol from Hilo
+// 1.0.0.016 - Fixed error respone strings.
+// 1.0.0.017 - V816 Support.
 
-[assembly: AssemblyVersion("1.0.0.013")]
-[assembly: AssemblyFileVersion("1.0.0.013")]
+[assembly: AssemblyVersion("1.0.0.017")]
+[assembly: AssemblyFileVersion("1.0.0.017")]

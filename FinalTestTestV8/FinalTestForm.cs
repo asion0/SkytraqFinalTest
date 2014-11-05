@@ -480,11 +480,17 @@ namespace FinalTestV8
             {
                 if (Program.duts[7 - i] == '1')
                 {
-                    comSelTable[i].Items.Add(profile.DutsPort[i]);
-                    comSelTable[i].SelectedIndex = 0;
+                    try
+                    {
+                        comSelTable[i].Items.Add(profile.DutsPort[i]);
+                        comSelTable[i].SelectedIndex = 0;
+                        comSelTable[i].Enabled = false;
+                    }
+                    catch
+                    {
+                    }
                     disableTable[i].Enabled = false;
                     disableTable[i].Checked = false;
-                    comSelTable[i].Enabled = false;
                 }
             }
 
@@ -771,7 +777,15 @@ namespace FinalTestV8
             //p.startTime = DateTime.Now;
             Stopwatch w = new Stopwatch();
             w.Start();
-            if (p.cmd == 'T' && Program.module == "V822")
+            if (p.cmd == 'R' && Program.module == "V816")
+            {
+                e.Cancel = t.DoV816Test(p, TestModule.V816Set.Set1);
+            }
+            else if (p.cmd == 'S' && Program.module == "V816")
+            {
+                e.Cancel = t.DoV816Test(p, TestModule.V816Set.Set2);
+            }
+            else if (p.cmd == 'T' && Program.module == "V822")
             {
                 e.Cancel = t.DoV822Test(p);
             }

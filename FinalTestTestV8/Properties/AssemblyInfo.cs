@@ -33,8 +33,8 @@ using System.Resources;
 // 您可以指定所有的值，也可以依照以下的方式，使用 '*' 將組建和修訂編號
 // 指定為預設值:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.013")]
-[assembly: AssemblyFileVersion("1.0.0.013")]
+[assembly: AssemblyVersion("1.0.0.017")]
+[assembly: AssemblyFileVersion("1.0.0.017")]
 
 // 1.0.0.01 - first version.
 // 1.0.0.02 - Does not save default setting avoid exception.
@@ -45,5 +45,6 @@ using System.Resources;
 // 1.0.0.011 - Support V815 read test setting from profile.
 // 1.0.0.012 - Fix V822 IO Test srec GPIO 3 fail issue.
 // 1.0.0.013 - Display module name and prom file(in V822)
+// 1.0.0.017 - Support V816 Final Test
 
 [assembly: NeutralResourcesLanguageAttribute("")]
