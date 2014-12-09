@@ -66,7 +66,7 @@ namespace FinalTestV8
             else
             {
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Open " + p.comPort + " in " + 
+                r.output = "Open " + p.comPort + " in " +
                     p.gps.GetBaudRate().ToString() + " success.";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
@@ -134,13 +134,8 @@ namespace FinalTestV8
                 }
             }
 
-
             bool testPass = false;
             bool fixPass = false;
-
-            //Stopwatch sw2 = new Stopwatch();    //Count position fix timeout
-            //sw2.Reset();
-            //sw2.Start();
             do
             {
                 byte[] buff = new byte[256];
@@ -200,7 +195,7 @@ namespace FinalTestV8
                     else if (!fixPass && ps == GpsMsgParser.ParsingResult.UpdateFixPosition)
                     {   //Now is not in position fixed status. it'll become fixed.
                         if (p.parser.parsingStat.positionFixResult >= 2)
-                        {   
+                        {
                             fixPass = true;
                         }
                     }
@@ -242,7 +237,7 @@ namespace FinalTestV8
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                 }
             }
-            
+
             if (!testPass)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
@@ -259,6 +254,198 @@ namespace FinalTestV8
             EndProcess(p);
             return true;
         }
+        
+        public bool DoTest815(WorkerParam p)
+        {
+            WorkerReportParam r = new WorkerReportParam();
+            r.index = p.index;
+            GPS_RESPONSE rep;
+            Stopwatch sw = new Stopwatch(); //Count test fail timeout
+            sw.Reset();
+            sw.Start();
+
+            rep = p.gps.Open(p.comPort, p.profile.baudRateIndex);
+
+            if (GPS_RESPONSE.UART_FAIL == rep)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                EndProcess(p);
+                return false;
+            }
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Open " + p.comPort + " in " +
+                    p.gps.GetBaudRate().ToString() + " success.";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+            }
+
+            rep = p.gps.SendColdStart(3);
+            if (GPS_RESPONSE.ACK != rep)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                EndProcess(p);
+                return false;
+            }
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Cold start success";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                Thread.Sleep(500);  //For venus 6 testing.
+            }
+
+            bool testPass = false;
+            bool fixPass = false;
+            do
+            {
+                byte[] buff = new byte[256];
+                int l = p.gps.ReadLineNoWait(buff, 256, 2000);
+                string line = Encoding.UTF8.GetString(buff, 0, l);
+                if (GpsMsgParser.CheckNmea(line))
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = line;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                    GpsMsgParser.ParsingResult ps = p.parser.ParsingNmea(line);
+                    if (ps == GpsMsgParser.ParsingResult.UpdateSate)
+                    {   //Now is in position fixed status.
+                        for (int i = 0; i < GpsMsgParser.ParsingStatus.MaxSattellite; i++)
+                        {
+                            GpsMsgParser.ParsingStatus.sateInfo s = p.parser.parsingStat.GetGpsSate(i);
+                            if (s.prn == GpsMsgParser.ParsingStatus.NullValue)
+                            {
+                                break;
+                            }
+                            if (s.snr == 0 || s.snr == GpsMsgParser.ParsingStatus.NullValue)
+                            {
+                                continue;
+                            }
+
+                            if (s.snr >= p.profile.v815SnrBoundL && s.snr <= p.profile.v815SnrBoundU)
+                            {
+                                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                                r.output = "Prn:" + s.prn.ToString() + " SNR:" + s.snr.ToString() + " test pass";
+                                p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                                testPass = true;
+                                break;
+                            }
+                        }
+                        if (testPass)
+                        {
+                            break;
+                        }
+                    }
+                    else if (!fixPass && ps == GpsMsgParser.ParsingResult.UpdateFixPosition)
+                    {   //Now is not in position fixed status. it'll become fixed.
+                        if (p.parser.parsingStat.positionFixResult >= 2)
+                        {
+                            fixPass = true;
+                        }
+                    }
+
+                    if (sw.ElapsedMilliseconds > p.profile.v815TestDuration * 1000)
+                    {
+                        break;
+                    }
+                }
+            } while (!p.bw.CancellationPending);
+
+            if (!testPass)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = (fixPass) ? WorkerParam.ErrorType.NmeaError : WorkerParam.ErrorType.SnrError;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                EndProcess(p);
+            }  
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Check SNR pass";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+            }
+            
+            // Test RTC
+            UInt32 rtc1 = 0, rtc2 = 0;
+            rep = p.gps.QueryRtc(ref rtc1);
+            if (GPS_RESPONSE.ACK != rep)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                EndProcess(p);
+                return false;
+            }
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Get RTC1 " + rtc1.ToString();
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                Thread.Sleep(1000);
+                rep = p.gps.QueryRtc(ref rtc2);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Get RTC2 " + rtc2.ToString();
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                if ((rtc2 - rtc1) > 2 || (rtc2 - rtc1) < 1)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = WorkerParam.ErrorType.CheckRtcError;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Check rtc pass";
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+            }
+
+
+            if (!p.bw.CancellationPending)
+            {
+                rep = p.gps.FactoryReset();
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.FactoryResetNack : WorkerParam.ErrorType.FactoryResetTimeOut;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Factory Reset success";
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+            }
+
+            //End Test
+            r.reportType = WorkerReportParam.ReportType.ShowFinished;
+            p.error = WorkerParam.ErrorType.NoError;
+            p.bw.ReportProgress(0, new WorkerReportParam(r));
+            EndProcess(p);
+            return true;
+        }
+
         public bool DoV822Test(WorkerParam p)
         {
             WorkerReportParam r = new WorkerReportParam();
@@ -425,6 +612,7 @@ namespace FinalTestV8
             EndProcess(p);
             return true;
         }
+
         public bool DoV816Test(WorkerParam p, V816Set s)
         {
             WorkerReportParam r = new WorkerReportParam();

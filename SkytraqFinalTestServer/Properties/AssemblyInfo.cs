@@ -46,6 +46,7 @@ using System.Runtime.InteropServices;
 // 1.0.0.015 - New protocol from Hilo
 // 1.0.0.016 - Fixed error respone strings.
 // 1.0.0.017 - V816 Support.
+// 1.0.0.018 - V815 Modify test module.
 
-[assembly: AssemblyVersion("1.0.0.017")]
-[assembly: AssemblyFileVersion("1.0.0.017")]
+[assembly: AssemblyVersion("1.0.0.018")]
+[assembly: AssemblyFileVersion("1.0.0.018")]

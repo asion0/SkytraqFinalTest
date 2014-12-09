@@ -793,7 +793,11 @@ namespace FinalTestV8
             {
                 e.Cancel = t.DoV822Download(p);
             }
-            else
+            else if(Program.module == "V815")
+            {
+                e.Cancel = t.DoTest815(p);
+            }
+            else 
             {
                 e.Cancel = t.DoTest(p);
             }

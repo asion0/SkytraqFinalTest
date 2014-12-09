@@ -36,9 +36,9 @@
             this.port = new System.Windows.Forms.TextBox();
             this.notify00 = new System.Windows.Forms.TextBox();
             this.noTest = new System.Windows.Forms.CheckBox();
-            this.label3 = new System.Windows.Forms.Label();
+            this.crcLabel = new System.Windows.Forms.Label();
             this.crcValue = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
+            this.modeLabel = new System.Windows.Forms.Label();
             this.workingMode = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
@@ -121,15 +121,15 @@
             this.noTest.Visible = false;
             this.noTest.CheckedChanged += new System.EventHandler(this.noTest_CheckedChanged);
             // 
-            // label3
+            // crcLabel
             // 
-            this.label3.Font = new System.Drawing.Font("Verdana", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.Black;
-            this.label3.Location = new System.Drawing.Point(12, 44);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(87, 33);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "CRC :";
+            this.crcLabel.Font = new System.Drawing.Font("Verdana", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.crcLabel.ForeColor = System.Drawing.Color.Black;
+            this.crcLabel.Location = new System.Drawing.Point(12, 44);
+            this.crcLabel.Name = "crcLabel";
+            this.crcLabel.Size = new System.Drawing.Size(87, 33);
+            this.crcLabel.TabIndex = 10;
+            this.crcLabel.Text = "CRC :";
             // 
             // crcValue
             // 
@@ -140,15 +140,15 @@
             this.crcValue.Size = new System.Drawing.Size(178, 33);
             this.crcValue.TabIndex = 10;
             // 
-            // label4
+            // modeLabel
             // 
-            this.label4.Font = new System.Drawing.Font("Verdana", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.Color.Black;
-            this.label4.Location = new System.Drawing.Point(12, 79);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(98, 33);
-            this.label4.TabIndex = 10;
-            this.label4.Text = "Mode :";
+            this.modeLabel.Font = new System.Drawing.Font("Verdana", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.modeLabel.ForeColor = System.Drawing.Color.Black;
+            this.modeLabel.Location = new System.Drawing.Point(12, 79);
+            this.modeLabel.Name = "modeLabel";
+            this.modeLabel.Size = new System.Drawing.Size(98, 33);
+            this.modeLabel.TabIndex = 10;
+            this.modeLabel.Text = "Mode :";
             // 
             // workingMode
             // 
@@ -166,8 +166,8 @@
             this.ClientSize = new System.Drawing.Size(696, 506);
             this.Controls.Add(this.workingMode);
             this.Controls.Add(this.crcValue);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.modeLabel);
+            this.Controls.Add(this.crcLabel);
             this.Controls.Add(this.noTest);
             this.Controls.Add(this.notify00);
             this.Controls.Add(this.port);
@@ -195,9 +195,9 @@
         private System.Windows.Forms.TextBox port;
         private System.Windows.Forms.TextBox notify00;
         private System.Windows.Forms.CheckBox noTest;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label crcLabel;
         private System.Windows.Forms.Label crcValue;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label modeLabel;
         private System.Windows.Forms.Label workingMode;
 
     }

@@ -45,6 +45,14 @@ namespace SkytraqFinalTestServer
             //this.Text = "Skytraq Final Test Server 1.0.0.5";
             this.Text = "Skytraq Final Test " + Assembly.GetExecutingAssembly().GetName().Version;
 
+            //V815 doesn't show
+            if (Program.version.IsV815())
+            {
+                crcLabel.Visible = false;
+                modeLabel.Visible = false;
+                crcValue.Visible = false;
+                workingMode.Visible = false;
+            }
         }
 
         //背景執行
