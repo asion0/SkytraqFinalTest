@@ -282,23 +282,86 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
 
-            rep = p.gps.SendColdStart(3);
-            if (GPS_RESPONSE.ACK != rep)
+            if (p.profile.v815TestColdStart == 1)
             {
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
-                return false;
-            }
-            else
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Cold start success";
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                Thread.Sleep(500);  //For venus 6 testing.
+                rep = p.gps.SendColdStart(3);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Cold start success";
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    Thread.Sleep(500);  //For venus 6 testing.
+                }
             }
 
+            if (p.profile.v815TestRtcDelay != 0)
+            {
+                for (int i = 0; i < p.profile.v815TestRtcDelay; ++i)
+                {
+                    Thread.Sleep(1000);  //Delay
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Test RTC Delay " + (i + 1).ToString();
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+            }
+
+            if (p.profile.v815TestRtc == 1)
+            {
+                // Test RTC
+                UInt32 rtc1 = 0, rtc2 = 0;
+                rep = p.gps.QueryRtc(ref rtc1);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Get RTC1 " + rtc1.ToString();
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                    Thread.Sleep(1010);
+                    rep = p.gps.QueryRtc(ref rtc2);
+                    if (GPS_RESPONSE.ACK != rep)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowError;
+                        p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                        EndProcess(p);
+                        return false;
+                    }
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Get RTC2 " + rtc2.ToString();
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                    if ((rtc2 - rtc1) > 2 || (rtc2 - rtc1) < 1)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowError;
+                        p.error = WorkerParam.ErrorType.CheckRtcError;
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                        EndProcess(p);
+                        return false;
+                    }
+                    else
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                        r.output = "Check rtc pass";
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    }
+                }
+            }
             bool testPass = false;
             bool fixPass = false;
             do
@@ -370,54 +433,6 @@ namespace FinalTestV8
                 r.output = "Check SNR pass";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
-            
-            // Test RTC
-            UInt32 rtc1 = 0, rtc2 = 0;
-            rep = p.gps.QueryRtc(ref rtc1);
-            if (GPS_RESPONSE.ACK != rep)
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
-                return false;
-            }
-            else
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Get RTC1 " + rtc1.ToString();
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-
-                Thread.Sleep(1000);
-                rep = p.gps.QueryRtc(ref rtc2);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Get RTC2 " + rtc2.ToString();
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-
-                if ((rtc2 - rtc1) > 2 || (rtc2 - rtc1) < 1)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.CheckRtcError;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                else
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Check rtc pass";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                }
-            }
-
 
             if (!p.bw.CancellationPending)
             {

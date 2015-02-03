@@ -47,6 +47,9 @@ using System.Runtime.InteropServices;
 // 1.0.0.016 - Fixed error respone strings.
 // 1.0.0.017 - V816 Support.
 // 1.0.0.018 - V815 Modify test module.
+// 1.0.0.019 - V815 Modify test module.
+// 1.0.0.020 - V815 Modify cold start.
+// 1.0.0.021 - V815 Modify test RTC.
 
-[assembly: AssemblyVersion("1.0.0.018")]
-[assembly: AssemblyFileVersion("1.0.0.018")]
+[assembly: AssemblyVersion("1.0.0.021")]
+[assembly: AssemblyFileVersion("1.0.0.021")]

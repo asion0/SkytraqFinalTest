@@ -18,6 +18,9 @@ namespace FinalTestV8
         public int testMode;
         public string[] DutsPort = new string[TesterDut];
         //Param for V815 Test
+        public int v815TestColdStart = 1;
+        public int v815TestRtc = 1;
+        public int v815TestRtcDelay = 5;
         public int v815SnrBoundU = 45;
         public int v815SnrBoundL = 40;
         public int v815TestDuration = 10;
@@ -48,6 +51,12 @@ namespace FinalTestV8
 
             if (Program.module == "V815")
             {
+                n = GetPrivateProfileString("V815", "TEST_COLD_START", "1", temp, 255, path);
+                v815TestColdStart = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V815", "TEST_RTC", "1", temp, 255, path);
+                v815TestRtc = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V815", "TEST_RTC_DELAY", "5", temp, 255, path);
+                v815TestRtcDelay = Convert.ToInt32(temp.ToString());
                 n = GetPrivateProfileString("V815", "SNR_U_BOUND", "45", temp, 255, path);
                 v815SnrBoundU = Convert.ToInt32(temp.ToString());
                 n = GetPrivateProfileString("V815", "SNR_L_BOUND", "40", temp, 255, path);

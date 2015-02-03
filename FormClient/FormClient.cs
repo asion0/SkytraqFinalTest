@@ -26,6 +26,8 @@ namespace FormClient
             comboBox1.Items.Add("@V816 Download_CRC_4BC1 15 00001111+");
             comboBox1.Items.Add("@V816 LoadTest_CRC_4BC0 15 00001111+");
             comboBox1.Items.Add("@V816 LoadTest_CRC_4BC1 15 00001111+");
+            comboBox1.Items.Add("@V815 Initial 01 00001111+");
+            comboBox1.Items.Add("@V815 Test_Start 01 00001111+");
 
                         close.Enabled = false;
             connect.Enabled = false;
