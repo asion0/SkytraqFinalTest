@@ -33,8 +33,8 @@ using System.Resources;
 // 您可以指定所有的值，也可以依照以下的方式，使用 '*' 將組建和修訂編號
 // 指定為預設值:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.021")]
-[assembly: AssemblyFileVersion("1.0.0.021")]
+[assembly: AssemblyVersion("1.0.0.022")]
+[assembly: AssemblyFileVersion("1.0.0.022")]
 
 // 1.0.0.01 - first version.
 // 1.0.0.02 - Does not save default setting avoid exception.
@@ -49,6 +49,7 @@ using System.Resources;
 // 1.0.0.018 - Update V815 Final Test, test rtc after SNR test.
 // 1.0.0.019 - Update V815 Final Test, test rtc before SNR test and add delay.
 // 1.0.0.020 - Add V815 Cold start option in profile.
-// 1.0.0.021 - Add V815 Rtc option in profile.
+// 1.0.0.021 - Add V815 RTC option in profile.
+// 1.0.0.022 - Change 822.sre for IO testing in ROM Mode.
 
 [assembly: NeutralResourcesLanguageAttribute("")]

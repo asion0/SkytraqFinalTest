@@ -50,6 +50,7 @@ using System.Runtime.InteropServices;
 // 1.0.0.019 - V815 Modify test module.
 // 1.0.0.020 - V815 Modify cold start.
 // 1.0.0.021 - V815 Modify test RTC.
+// 1.0.0.022 - V822 Modify for IO Testing in ROM Mode.
 
-[assembly: AssemblyVersion("1.0.0.021")]
-[assembly: AssemblyFileVersion("1.0.0.021")]
+[assembly: AssemblyVersion("1.0.0.022")]
+[assembly: AssemblyFileVersion("1.0.0.022")]
