@@ -332,21 +332,12 @@ namespace FinalTestV8
                         }
                         index = 0;
                         received.Initialize();
-
-                            /*
-                        else if (ack.Equals("END\0"))
-                        {
-                            return GPS_RESPONSE.END;
-                        }
-                        else
-                        {
-                            return GPS_RESPONSE.TIMEOUT;
-                        }
-                             */
                     }
                 }
-                Thread.Sleep(10);
-                //timeout--;
+                else
+                {
+                    Thread.Sleep(10);
+                }
             }
             return GPS_RESPONSE.TIMEOUT;
         }
@@ -391,6 +382,20 @@ namespace FinalTestV8
             ClearQueue();
             serial.NewLine = "\0";
             serial.WriteLine(cmd);
+            //serial.Write(cmd.ToCharArray(), 0, len);
+            return;
+        }
+
+        private void SendDummyCmdNoAck(int len)
+        {
+            ClearQueue();
+            serial.NewLine = "\0";
+            byte[] buf = new byte[1];
+            buf[0] = 0;
+            for (int i = 0; i < len; ++i)
+            {
+                serial.Write(buf, 0, 1);
+            }
             //serial.Write(cmd.ToCharArray(), 0, len);
             return;
         }
@@ -811,14 +816,24 @@ namespace FinalTestV8
             return retval;
         }     
 
-        public GPS_RESPONSE SendLoaderDownload()
+        public GPS_RESPONSE SendLoaderDownload(ref String dbgOutput)
         {
             GPS_RESPONSE retval = GPS_RESPONSE.NONE;
             String cmd = "$LOADER DOWNLOAD";
             //WAIT
-            retval = SendStringCmdAck(cmd, cmd.Length, 1000, "OK\0");
-            //OK
-            //retval = WaitStringAck(1000, "OK");
+            for (int i = 0; i < 5; ++i)
+            {
+                dbgOutput += "send [" + cmd + "];";
+                retval = SendStringCmdAck(cmd, cmd.Length, 1000, "OK\0");
+                if (GPS_RESPONSE.OK == retval)
+                {
+                    dbgOutput += "ack [OK];";
+                    break;
+                }
+                dbgOutput += "send dummy data;";
+                SendDummyCmdNoAck(30);
+                Thread.Sleep(500);
+            }
             return retval;
         }
 

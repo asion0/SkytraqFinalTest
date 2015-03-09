@@ -33,8 +33,8 @@ using System.Resources;
 // 您可以指定所有的值，也可以依照以下的方式，使用 '*' 將組建和修訂編號
 // 指定為預設值:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.022")]
-[assembly: AssemblyFileVersion("1.0.0.022")]
+[assembly: AssemblyVersion("1.0.0.027")]
+[assembly: AssemblyFileVersion("1.0.0.027")]
 
 // 1.0.0.01 - first version.
 // 1.0.0.02 - Does not save default setting avoid exception.
@@ -51,5 +51,10 @@ using System.Resources;
 // 1.0.0.020 - Add V815 Cold start option in profile.
 // 1.0.0.021 - Add V815 RTC option in profile.
 // 1.0.0.022 - Change 822.sre for IO testing in ROM Mode.
+// 1.0.0.023 - V822 test always in 115200 bps.
+// 1.0.0.024 - Fixed V822 test in ROM mode factory reset fail issue.
+// 1.0.0.025 - Update download loader.
+// 1.0.0.026 - Increase time out duration when send Loader Download command.
+// 1.0.0.027 - Add retry in SendLoaderDownload().
 
 [assembly: NeutralResourcesLanguageAttribute("")]

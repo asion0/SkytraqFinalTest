@@ -223,6 +223,10 @@ namespace FinalTestV8
                     l.Text = "Testing...";
                     l.ForeColor = System.Drawing.Color.Green;
                     break;
+                case ResultDisplayType.Downloading:
+                    l.Text = "Loading...";
+                    l.ForeColor = System.Drawing.Color.DarkOrange;
+                    break;
                 case ResultDisplayType.Fail:
                     l.Text = "FAIL";
                     l.ForeColor = System.Drawing.Color.Red;
@@ -748,7 +752,14 @@ namespace FinalTestV8
                     testParam[i].fwProfile = fwProfile;
                 }
 
-                SetResultDisplay(resultTable[i] as Label, ResultDisplayType.Testing);
+                if (s[0] == 'L')
+                {
+                    SetResultDisplay(resultTable[i] as Label, ResultDisplayType.Downloading);
+                }
+                else
+                {
+                    SetResultDisplay(resultTable[i] as Label, ResultDisplayType.Testing);
+                }
             }
 
             //TestModule.ClearResult();

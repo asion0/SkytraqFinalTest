@@ -470,7 +470,10 @@ namespace FinalTestV8
             sw.Reset();
             sw.Start();
 
-            rep = p.gps.Open(p.comPort, GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate));
+            //20150204 - Angus change to do ROM test in baud rate 115200.
+            //rep = p.gps.Open(p.comPort, GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate));
+            int baudIdx = GpsBaudRateConverter.BaudRate2Index(115200);
+            rep = p.gps.Open(p.comPort, baudIdx);
 
             if (GPS_RESPONSE.UART_FAIL == rep)
             {
@@ -505,25 +508,36 @@ namespace FinalTestV8
                 Thread.Sleep(500);  //For venus 6 testing.
             }
 
-            rep = p.gps.ChangeBaudrate((byte)5, 2);
-            if (GPS_RESPONSE.ACK != rep)
+            if (p.profile.dlBaudSel != baudIdx)
             {
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
-                return false;
-            }
-            else
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Change baud rate success";
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                rep = p.gps.ChangeBaudrate((byte)5, 2);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    EndProcess(p);
+                    return false;
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Change baud rate success";
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
             }
 
-            rep = p.gps.SendLoaderDownload();
+            String dbgOutput = "";
+            rep = p.gps.SendLoaderDownload(ref dbgOutput);
             if (GPS_RESPONSE.OK != rep)
             {
+                if (dbgOutput != "")
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = dbgOutput;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.LoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
@@ -532,6 +546,13 @@ namespace FinalTestV8
             }
             else
             {
+                if (dbgOutput != "")
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = dbgOutput;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
                 r.output = "Loader Download success";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
@@ -599,7 +620,8 @@ namespace FinalTestV8
 
             Thread.Sleep(500);
             p.gps.Close();
-            rep = p.gps.Open(p.comPort, GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate));
+            //rep = p.gps.Open(p.comPort, GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate));
+            rep = p.gps.Open(p.comPort, GpsBaudRateConverter.BaudRate2Index(115200));
 
             if (!p.bw.CancellationPending)
             {
@@ -907,7 +929,7 @@ namespace FinalTestV8
         }
 
         private static int lastDeviceBaudIdx = -1;
-        private static int lastRomBaudIdx = 1;
+        //private static int lastRomBaudIdx = 1;
         public bool DoV822Download(WorkerParam p)
         {
             WorkerReportParam r = new WorkerReportParam();
@@ -933,6 +955,7 @@ namespace FinalTestV8
             // Retry three times for disable auto uart firmware, it'll 
             // change uart output baud rate after 5 seconds.
             int baudIdx = -1;
+            lastDeviceBaudIdx = 5;      //V822 boot in ROM mode 115200 bps.
             for (int i = 0; i < 3; ++i)
             {
                 baudIdx = ScanBaudRate(p, lastDeviceBaudIdx);
@@ -958,120 +981,126 @@ namespace FinalTestV8
                 return false;
             }
 
-            String kVer = "";
-            String sVer = "";
-            String rev = "";
-            rep = p.gps.QueryVersion(DefaultCmdTimeout, ref kVer, ref sVer, ref rev);
-            if (GPS_RESPONSE.ACK != rep)
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryVersionNack : WorkerParam.ErrorType.QueryVersionTimeOut;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
-                return false;
-            }
-            else if (rev != "20130221")
-            {
-                //Reboot to ROM Code
-                rep = p.gps.SetRegister(2000, 0x2000F050, 0x00000000);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                else
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Reboot from ROM success";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    p.gps.Close();
-                    Thread.Sleep(3000);  //Waiting for reboot
-                }
+            //String kVer = "";
+            //String sVer = "";
+            //String rev = "";
+            //rep = p.gps.QueryVersion(DefaultCmdTimeout, ref kVer, ref sVer, ref rev);
+            //if (GPS_RESPONSE.ACK != rep)
+            //{
+            //    r.reportType = WorkerReportParam.ReportType.ShowError;
+            //    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryVersionNack : WorkerParam.ErrorType.QueryVersionTimeOut;
+            //    p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //    EndProcess(p);
+            //    return false;
+            //}
+            //else if (rev != "20130221")
+            //{
+            //    //Reboot to ROM Code
+            //    rep = p.gps.SetRegister(2000, 0x2000F050, 0x00000000);
+            //    if (GPS_RESPONSE.ACK != rep)
+            //    {
+            //        r.reportType = WorkerReportParam.ReportType.ShowError;
+            //        p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
+            //        p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //        EndProcess(p);
+            //        return false;
+            //    }
+            //    else
+            //    {
+            //        r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            //        r.output = "Reboot from ROM success";
+            //        p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //        p.gps.Close();
+            //        Thread.Sleep(3000);  //Waiting for reboot
+            //    }
 
-                // Retry three times for disable auto uart firmware, it'll 
-                // change uart output baud rate after 5 seconds.
-                baudIdx = -1;
-                for (int i = 0; i < 3; ++i)
-                {
-                    baudIdx = ScanBaudRate(p, lastRomBaudIdx);
-                    if (-1 != baudIdx)
-                    {
-                        lastRomBaudIdx = baudIdx;
-                        r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                        r.output = "Open " + p.comPort + " in " +
-                            GpsBaudRateConverter.Index2BaudRate(baudIdx).ToString() +
-                            " success.";
-                        p.bw.ReportProgress(0, new WorkerReportParam(r));
-                        break;
-                    }
-                    Thread.Sleep(50);
-                }
+            //    // Retry three times for disable auto uart firmware, it'll 
+            //    // change uart output baud rate after 5 seconds.
+            //    baudIdx = -1;
+            //    for (int i = 0; i < 3; ++i)
+            //    {
+            //        baudIdx = ScanBaudRate(p, lastRomBaudIdx);
+            //        if (-1 != baudIdx)
+            //        {
+            //            lastRomBaudIdx = baudIdx;
+            //            r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            //            r.output = "Open " + p.comPort + " in " +
+            //                GpsBaudRateConverter.Index2BaudRate(baudIdx).ToString() +
+            //                " success.";
+            //            p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //            break;
+            //        }
+            //        Thread.Sleep(50);
+            //    }
 
-                if (-1 == baudIdx)
+            //    if (-1 == baudIdx)
+            //    {
+            //        r.reportType = WorkerReportParam.ReportType.ShowError;
+            //        p.error = WorkerParam.ErrorType.OpenPortFail;
+            //        p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //        EndProcess(p);
+            //        return false;
+            //    }
+            //}
+
+            //if ((p.fwProfile.tagAddress == 0 && p.fwProfile.tagContent == 0) ||
+            //    (p.fwProfile.tagAddress == 0xAAAAAAAA && p.fwProfile.tagContent == 0x55555555))
+            //{   //No tag, using rom loader command
+            //    rep = p.gps.StartDownload((byte)p.profile.dlBaudSel);
+            //    if (GPS_RESPONSE.ACK != rep)
+            //    {
+            //        r.reportType = WorkerReportParam.ReportType.ShowError;
+            //        p.error = (rep == GPS_RESPONSE.NACK)
+            //            ? WorkerParam.ErrorType.DownloadCmdNack
+            //            : WorkerParam.ErrorType.DownloadCmdTimeOut;
+            //        p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //        EndProcess(p);
+            //        return false;
+            //    }
+            //    else
+            //    {
+            //        p.gps.Close();
+            //        rep = p.gps.Open(p.comPort, p.profile.dlBaudSel);
+            //        if (GPS_RESPONSE.UART_FAIL == rep)
+            //        {
+            //            r.reportType = WorkerReportParam.ReportType.ShowError;
+            //            p.error = (rep == GPS_RESPONSE.NACK)
+            //                ? WorkerParam.ErrorType.DownloadCmdNack
+            //                : WorkerParam.ErrorType.DownloadCmdTimeOut;
+            //            p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //            //EndProcess(p);
+            //            return false;
+            //        }
+            //        r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            //        r.output = "Download command success";
+            //        p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+            //        Thread.Sleep(1000);
+            //    }
+            //}
+            //else
+            {   //20150225 Always use external loader in download.
+                if (p.profile.dlBaudSel != baudIdx)
                 {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.OpenPortFail;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-            }
-            if ((p.fwProfile.tagAddress == 0 && p.fwProfile.tagContent == 0) ||
-                (p.fwProfile.tagAddress == 0xAAAAAAAA && p.fwProfile.tagContent == 0x55555555))
-            {   //No tag, using rom loader command
-                rep = p.gps.StartDownload((byte)p.profile.dlBaudSel);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK)
-                        ? WorkerParam.ErrorType.DownloadCmdNack
-                        : WorkerParam.ErrorType.DownloadCmdTimeOut;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                else
-                {
-                    p.gps.Close();
-                    rep = p.gps.Open(p.comPort, p.profile.dlBaudSel);
-                    if (GPS_RESPONSE.UART_FAIL == rep)
+                    rep = p.gps.ChangeBaudrate((byte)p.profile.dlBaudSel, 2);
+                    if (GPS_RESPONSE.ACK != rep)
                     {
                         r.reportType = WorkerReportParam.ReportType.ShowError;
-                        p.error = (rep == GPS_RESPONSE.NACK)
-                            ? WorkerParam.ErrorType.DownloadCmdNack
-                            : WorkerParam.ErrorType.DownloadCmdTimeOut;
+                        p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
                         p.bw.ReportProgress(0, new WorkerReportParam(r));
-                        //EndProcess(p);
+                        EndProcess(p);
                         return false;
                     }
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Download command success";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-
-                    Thread.Sleep(1000);
-                }
-            }
-            else
-            {   rep = p.gps.ChangeBaudrate((byte)p.profile.dlBaudSel, 2);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                else
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Change baud rate success";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    else
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                        r.output = "Change baud rate success";
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    }
                 }
 
-                rep = p.gps.SendLoaderDownload();
+                String dbgOutput = "";
+                rep = p.gps.SendLoaderDownload(ref dbgOutput);
                 if (GPS_RESPONSE.OK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
@@ -1082,6 +1111,13 @@ namespace FinalTestV8
                 }
                 else
                 {
+                    if (dbgOutput != "")
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                        r.output = dbgOutput;
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    }
+
                     r.reportType = WorkerReportParam.ReportType.ShowProgress;
                     r.output = "Loader Download success";
                     p.bw.ReportProgress(0, new WorkerReportParam(r));

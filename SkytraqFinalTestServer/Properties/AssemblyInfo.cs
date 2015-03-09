@@ -51,6 +51,8 @@ using System.Runtime.InteropServices;
 // 1.0.0.020 - V815 Modify cold start.
 // 1.0.0.021 - V815 Modify test RTC.
 // 1.0.0.022 - V822 Modify for IO Testing in ROM Mode.
+// 1.0.0.023 - V822 test in 115200 bps.
+// 1.0.0.025 - Rebuild for new download loader.
 
-[assembly: AssemblyVersion("1.0.0.022")]
-[assembly: AssemblyFileVersion("1.0.0.022")]
+[assembly: AssemblyVersion("1.0.0.025")]
+[assembly: AssemblyFileVersion("1.0.0.025")]

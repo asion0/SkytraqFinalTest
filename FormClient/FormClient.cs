@@ -19,17 +19,33 @@ namespace FormClient
         private void Form1_Load(object sender, EventArgs e)
         {
             serverIp.Text = "192.168.0.68";
-            comboBox1.Text = "@V816 Set1_Start 15 00001111+";
-            comboBox1.Items.Add("@V816 Initial 15 00001111+");
-            comboBox1.Items.Add("@V816 Set1_Start2 15 00001111+");
-            comboBox1.Items.Add("@V816 Download_CRC_4BC0 15 00001111+");
-            comboBox1.Items.Add("@V816 Download_CRC_4BC1 15 00001111+");
-            comboBox1.Items.Add("@V816 LoadTest_CRC_4BC0 15 00001111+");
-            comboBox1.Items.Add("@V816 LoadTest_CRC_4BC1 15 00001111+");
-            comboBox1.Items.Add("@V815 Initial 01 00001111+");
-            comboBox1.Items.Add("@V815 Test_Start 01 00001111+");
+            comboBox1.Text = "";
+            comboBox1.Items.Add("@V828 Testmode_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V828 Download_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V828 LoadTest_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V828 Initial 15 00000001+");
+            comboBox1.Items.Add("@V828 Test_Start 01 00000001+");
+            comboBox1.Items.Add("@V828 Load_Start 01 00000001+");
 
-                        close.Enabled = false;
+            comboBox1.Items.Add("@V822 Testmode_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V822 Download_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V822 LoadTest_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V822 Initial 15 00000001+");
+            comboBox1.Items.Add("@V822 Test_Start 01 00000001+");
+            comboBox1.Items.Add("@V822 Load_Start 01 00000001+");
+
+            comboBox1.Items.Add("@V816 Initial 15 00000001+");
+            comboBox1.Items.Add("@V816 Set1_Start 01 00000001+");
+            comboBox1.Items.Add("@V816 Set2_Start 01 00000001+");
+
+            comboBox1.Items.Add("@V815 Initial 15 00000001+");
+            comboBox1.Items.Add("@V815 Test_Start 01 00000001+");
+
+            comboBox1.Items.Add("@V821 Initial 15 00000001+");
+            comboBox1.Items.Add("@V821 Test_Start 01 00000001+");
+
+
+            close.Enabled = false;
             connect.Enabled = false;
             send.Enabled = true;
 
