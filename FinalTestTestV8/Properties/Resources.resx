@@ -121,7 +121,10 @@
   <data name="FinalTest3" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icons\FinalTest3.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="IoTesterSrec" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Srec\ioTest.sre;System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="V822TesterSrec" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Srec\822.sre;System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;big5</value>
+    <value>..\Srec\822.sre;System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>

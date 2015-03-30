@@ -20,6 +20,13 @@ namespace FormClient
         {
             serverIp.Text = "192.168.0.68";
             comboBox1.Text = "";
+            comboBox1.Items.Add("@V838 Testmode_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V838 Download_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V838 LoadTest_CRC_0000 15 00000001+");
+            comboBox1.Items.Add("@V838 Initial 15 00000001+");
+            comboBox1.Items.Add("@V838 Test_Start 01 00000001+");
+            comboBox1.Items.Add("@V838 Load_Start 01 00000001+");
+
             comboBox1.Items.Add("@V828 Testmode_CRC_0000 15 00000001+");
             comboBox1.Items.Add("@V828 Download_CRC_0000 15 00000001+");
             comboBox1.Items.Add("@V828 LoadTest_CRC_0000 15 00000001+");

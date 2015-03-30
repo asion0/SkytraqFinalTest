@@ -28,6 +28,14 @@ namespace FinalTestV8
         public int v816SnrBoundU = 45;
         public int v816SnrBoundL = 40;
         public int v816TestDuration = 10;
+        //Param for V828 Test
+        public int v828SnrBoundU = 45;
+        public int v828SnrBoundL = 40;
+        public int v828TestDuration = 10;
+        //Param for V838 Test
+        public int v838SnrBoundU = 45;
+        public int v838SnrBoundL = 40;
+        public int v838TestDuration = 10;
 
         private enum ErrorCode
         {
@@ -75,6 +83,25 @@ namespace FinalTestV8
                 v816TestDuration = Convert.ToInt32(temp.ToString());
             }
 
+            if (Program.module == "V828")
+            {
+                n = GetPrivateProfileString("V828", "SNR_U_BOUND", "45", temp, 255, path);
+                v828SnrBoundU = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V828", "SNR_L_BOUND", "40", temp, 255, path);
+                v828SnrBoundL = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V828", "TEST_DURATION", "10", temp, 255, path);
+                v828TestDuration = Convert.ToInt32(temp.ToString());
+            }
+
+            if (Program.module == "V838")
+            {
+                n = GetPrivateProfileString("V838", "SNR_U_BOUND", "45", temp, 255, path);
+                v838SnrBoundU = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V838", "SNR_L_BOUND", "40", temp, 255, path);
+                v838SnrBoundL = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V838", "TEST_DURATION", "10", temp, 255, path);
+                v838TestDuration = Convert.ToInt32(temp.ToString());
+            }
             string session = "Site" + siteNo.ToString("D2");
             for (int i = 0; i < TesterDut; ++i)
             {

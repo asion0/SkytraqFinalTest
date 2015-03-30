@@ -158,7 +158,10 @@ namespace FinalTestV8
 
         public GPS_RESPONSE Close()
         {
-            serial.Close();
+            if (serial.IsOpen)
+            {
+                serial.Close();
+            }
             return GPS_RESPONSE.NONE;
         }
 
@@ -655,7 +658,7 @@ namespace FinalTestV8
             return retval;
         }
 
-        public GPS_RESPONSE SendColdStart(int retry)
+        public GPS_RESPONSE SendColdStart(int retry, int timeout)
         {
             GPS_RESPONSE retval = GPS_RESPONSE.NONE;
             byte[] cmdData = new byte[15];
@@ -665,7 +668,7 @@ namespace FinalTestV8
             BinaryCommand cmd = new BinaryCommand(cmdData);
             for (int i = 0; i < retry; ++i)
             {
-                retval = SendCmdAck(cmd.GetBuffer(), cmd.Size(), 2000);
+                retval = SendCmdAck(cmd.GetBuffer(), cmd.Size(), timeout);
                 if (retval == GPS_RESPONSE.ACK)
                 {
                     break;
@@ -800,6 +803,13 @@ namespace FinalTestV8
                 " " + (length + checksum).ToString() + " ";
 
             retval = SendStringCmdAck(cmd, cmd.Length, 10000, "OK\0");
+            return retval;
+        }
+
+        public GPS_RESPONSE SendTestSrecCmd(String cmd, int timeout)
+        {
+            GPS_RESPONSE retval = GPS_RESPONSE.NONE;
+            retval = SendStringCmdAck(cmd, cmd.Length, timeout, "OK\0");
             return retval;
         }
 

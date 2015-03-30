@@ -53,6 +53,9 @@ using System.Runtime.InteropServices;
 // 1.0.0.022 - V822 Modify for IO Testing in ROM Mode.
 // 1.0.0.023 - V822 test in 115200 bps.
 // 1.0.0.025 - Rebuild for new download loader.
+// 1.0.0.026 - Add V828 support.
+// 1.0.0.027 - Add V828 support.
+// 1.0.0.028 - Fix close port issue.
 
-[assembly: AssemblyVersion("1.0.0.025")]
-[assembly: AssemblyFileVersion("1.0.0.025")]
+[assembly: AssemblyVersion("1.0.0.028")]
+[assembly: AssemblyFileVersion("1.0.0.028")]

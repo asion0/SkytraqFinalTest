@@ -30,6 +30,7 @@
     <StartupObject>
     </StartupObject>
     <TargetFrameworkSubset>Full</TargetFrameworkSubset>
+    <TargetZone>LocalIntranet</TargetZone>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -45,7 +46,6 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetZone>LocalIntranet</TargetZone>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -176,6 +176,7 @@
     <None Include="Properties\app.manifest" />
     <None Include="Resources\FinalTest3.ico" />
     <None Include="Srec\822.sre" />
+    <None Include="Srec\ioTest.sre" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -439,13 +439,18 @@ namespace FinalTestV8
                 " - " + Program.module + " Site " +
                 Program.siteNumber.ToString() + " Duts " + Program.duts;
             TestRunning = TestStatus.Ready;
-            if (Program.module == "V822")
+            if (Program.module == "V822" || Program.module == "V828" || Program.module == "V838")
             {
                 isPromIniLoaded = ReadePromIniFile();
-                if(isPromIniLoaded)
+                if (isPromIniLoaded)
                 {
                     fwProfile.ReadePromRawData(Environment.CurrentDirectory + "\\" + fwProfile.promFile);
                     promFile.Text = fwProfile.promFile;
+                }
+                else
+                {
+                    MessageBox.Show("prom.ini file doesn't exist!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.Close();
                 }
             }
             moduleName.Text = Program.module;
@@ -747,7 +752,7 @@ namespace FinalTestV8
                 testParam[i].profile = profile;
                 testParam[i].log.Remove(0, testParam[i].log.Length);
                 testParam[i].cmd = s[0];
-                if (Program.module == "V822")
+                if (Program.module == "V822" || Program.module == "V828" || Program.module == "V838")
                 {
                     testParam[i].fwProfile = fwProfile;
                 }
@@ -788,29 +793,38 @@ namespace FinalTestV8
             //p.startTime = DateTime.Now;
             Stopwatch w = new Stopwatch();
             w.Start();
-            if (p.cmd == 'R' && Program.module == "V816")
-            {
+
+            if (p.cmd == 'T' && Program.module == "V828")
+            {   //822 Test
+                e.Cancel = t.DoV828Test(p);
+            }
+            else if (p.cmd == 'T' && Program.module == "V838")
+            {   //822 Test
+                e.Cancel = t.DoV838Test(p);
+            }
+            else if (p.cmd == 'T' && Program.module == "V822")
+            {   //822 Test
+                e.Cancel = t.DoV822Test(p);
+            }
+            else if (p.cmd == 'L' && (Program.module == "V822" || Program.module == "V828" || Program.module == "V838"))
+            {   //822 Download
+                e.Cancel = t.DoV822Download(p);
+            }
+            else if (p.cmd == 'R' && Program.module == "V816")
+            {   //816 Test Set1
                 e.Cancel = t.DoV816Test(p, TestModule.V816Set.Set1);
             }
             else if (p.cmd == 'S' && Program.module == "V816")
-            {
+            {   //816 Test Set2
                 e.Cancel = t.DoV816Test(p, TestModule.V816Set.Set2);
             }
-            else if (p.cmd == 'T' && Program.module == "V822")
-            {
-                e.Cancel = t.DoV822Test(p);
-            }
-            else if (p.cmd == 'L' && Program.module == "V822")
-            {
-                e.Cancel = t.DoV822Download(p);
-            }
             else if(Program.module == "V815")
-            {
-                e.Cancel = t.DoTest815(p);
+            {   //815 Test
+                e.Cancel = t.DoV815Test(p);
             }
             else 
             {
-                e.Cancel = t.DoTest(p);
+                //e.Cancel = t.DoTest(p);
             }
             p.duration = w.ElapsedMilliseconds;
             w.Stop();
