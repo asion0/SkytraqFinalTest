@@ -56,6 +56,7 @@ using System.Runtime.InteropServices;
 // 1.0.0.026 - Add V828 support.
 // 1.0.0.027 - Add V828 support.
 // 1.0.0.028 - Fix close port issue.
+// 1.0.0.029 - Change download loader for change baud rate.
 
-[assembly: AssemblyVersion("1.0.0.028")]
-[assembly: AssemblyFileVersion("1.0.0.028")]
+[assembly: AssemblyVersion("1.0.0.029")]
+[assembly: AssemblyFileVersion("1.0.0.029")]

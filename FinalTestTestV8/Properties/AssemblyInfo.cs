@@ -33,8 +33,8 @@ using System.Resources;
 // 您可以指定所有的值，也可以依照以下的方式，使用 '*' 將組建和修訂編號
 // 指定為預設值:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.028")]
-[assembly: AssemblyFileVersion("1.0.0.028")]
+[assembly: AssemblyVersion("1.0.0.029")]
+[assembly: AssemblyFileVersion("1.0.0.029")]
 
 // 1.0.0.01 - first version.
 // 1.0.0.02 - Does not save default setting avoid exception.
@@ -57,5 +57,6 @@ using System.Resources;
 // 1.0.0.026 - Increase time out duration when send Loader Download command.
 // 1.0.0.027 - Add retry in SendLoaderDownload().
 // 1.0.0.028 - Adjust BoostBaud conditions in V828 Download.
+// 1.0.0.029 - Change download loader for baud rate change.
 
 [assembly: NeutralResourcesLanguageAttribute("")]

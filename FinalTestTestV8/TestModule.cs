@@ -864,6 +864,8 @@ namespace FinalTestV8
             }
 
             //20150225 Always use external loader in download.
+            //20150330 Do change baud rate in loader.
+            /*
             if (p.profile.dlBaudSel > baudIdx)
             {
                 rep = p.gps.ChangeBaudrate((byte)p.profile.dlBaudSel, 2);
@@ -882,7 +884,7 @@ namespace FinalTestV8
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                 }
             }
-
+            */
             String dbgOutput = "";
             rep = p.gps.SendLoaderDownload(ref dbgOutput);
             if (GPS_RESPONSE.OK != rep)
@@ -919,8 +921,30 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
                 r.output = "Upload Loader success";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                Thread.Sleep(1000);
+                //Thread.Sleep(1000);
             }
+
+            p.gps.Close();
+            Thread.Sleep(100);
+            rep = p.gps.Open(p.comPort, p.profile.dlBaudSel);
+
+            if (GPS_RESPONSE.UART_FAIL == rep)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                EndProcess(p);
+                return false;
+            }
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Re-pen " + p.comPort + " in " +
+                    GpsBaudRateConverter.Index2BaudRate(p.profile.dlBaudSel).ToString() + " success.";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+            }
+            Thread.Sleep(1000);
+
 
             if ((p.fwProfile.tagAddress == 0 && p.fwProfile.tagContent == 0) ||
                 (p.fwProfile.tagAddress == 0xAAAAAAAA && p.fwProfile.tagContent == 0x55555555))
