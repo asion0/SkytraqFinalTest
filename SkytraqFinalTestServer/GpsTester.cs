@@ -38,8 +38,9 @@ namespace SkytraqFinalTestServer
             }
         }
 
-        private bool InitSite(CmdData cd)
+        private bool InitSite(CmdData cd, string workingNumber)
         {
+            string workingNumberKey = "WorkingNumber";
             string siteModuleKey = "SiteModule";
             string siteAckKey = "SiteAck" + cd.Siteno.ToString();
             string siteCmdKey = "SiteCmd" + cd.Siteno.ToString();
@@ -49,6 +50,7 @@ namespace SkytraqFinalTestServer
             key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(keyPath);
             //if (key != null)
             {   //Clear all fields
+                key.SetValue(workingNumberKey, workingNumber, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue(siteModuleKey, cd.module, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue(siteAckKey, "", Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue(siteCmdKey, "", Microsoft.Win32.RegistryValueKind.String);
@@ -59,7 +61,7 @@ namespace SkytraqFinalTestServer
             siteTask[cd.Siteno].siteNumber = cd.Siteno;
             string ft3Path = Environment.CurrentDirectory + "\\FinalTestV8.exe";
             string param = cd.module + " " + cd.Siteno.ToString() + " " + cd.duts +
-                " \"" + Environment.CurrentDirectory  + "\\SiteProfile.ini\" ";
+                " \"" + Environment.CurrentDirectory  + "\\SiteProfile.ini\" " + workingNumber + " ";
             if (workingProcess[cd.Siteno] != null && workingProcess[cd.Siteno].HasExited == false)
             {
                 workingProcess[cd.Siteno].Kill();
@@ -94,7 +96,7 @@ namespace SkytraqFinalTestServer
             }
         }
 
-        private bool DoInitial(ref CmdData cd)
+        private bool DoInitial(ref CmdData cd, string workingNumber)
         {
             if (ServerForm.noTestValue)
             {
@@ -108,7 +110,7 @@ namespace SkytraqFinalTestServer
             {
                 return false;
             }
-            return InitSite(cd);
+            return InitSite(cd, workingNumber);
         }
 
         [DllImport("kernel32", CharSet = CharSet.Unicode)]
@@ -165,7 +167,7 @@ namespace SkytraqFinalTestServer
             return crc == promCrc;
         }
 
-        private bool DoWork(ref CmdData cd)
+        private bool DoWork(ref CmdData cd, string workingNumber)
         {
             if (ServerForm.noTestValue)
             {
@@ -176,7 +178,7 @@ namespace SkytraqFinalTestServer
 
             if (workingProcess[cd.Siteno] == null || workingProcess[cd.Siteno].HasExited == true)
             {
-                if (InitSite(cd))
+                if (InitSite(cd, workingNumber))
                 {
                     return true;
                 }
@@ -243,7 +245,7 @@ namespace SkytraqFinalTestServer
             }
         }
 
-        private bool DoLoad(ref CmdData cd)
+        private bool DoLoad(ref CmdData cd, string workingNumber)
         {
             if (ServerForm.noTestValue)
             {
@@ -254,7 +256,7 @@ namespace SkytraqFinalTestServer
 
             if (workingProcess[cd.Siteno] == null || workingProcess[cd.Siteno].HasExited == true)
             {
-                if (InitSite(cd))
+                if (InitSite(cd, workingNumber))
                 {
                     return true;
                 }
@@ -306,7 +308,7 @@ namespace SkytraqFinalTestServer
 
         //private static UInt32 crc = 0;
         //private static bool setCrc = false;
-        public string DoCommand(string cmd, object tcp)
+        public string DoCommand(string cmd, object tcp, string workingNumber)
         {
             AddMessage("Received command " + cmd);
 
@@ -317,7 +319,7 @@ namespace SkytraqFinalTestServer
             switch (cd.cmdType)
             {
                 case CmdData.CmdType.Initial:
-                    if(DoInitial(ref cd))
+                    if (DoInitial(ref cd, workingNumber))
                     {
                         cd.cmdType = CmdData.CmdType.Err01;
                         retCmd = GetReturnCommand(cd);
@@ -329,7 +331,7 @@ namespace SkytraqFinalTestServer
                     }
                     break;
                 case CmdData.CmdType.Set1_Start:
-                    if (DoWork(ref cd))
+                    if (DoWork(ref cd, workingNumber))
                     {
                         cd.cmdType = CmdData.CmdType.Err2;
                         retCmd = GetReturnCommand(cd);
@@ -345,7 +347,7 @@ namespace SkytraqFinalTestServer
                     }
                     break;
                 case CmdData.CmdType.Set2_Start:
-                    if (DoWork(ref cd))
+                    if (DoWork(ref cd, workingNumber))
                     {
                         cd.cmdType = CmdData.CmdType.Err3;
                         retCmd = GetReturnCommand(cd);
@@ -361,7 +363,7 @@ namespace SkytraqFinalTestServer
                     }
                     break;
                 case CmdData.CmdType.Test_Start:
-                    if (DoWork(ref cd))
+                    if (DoWork(ref cd, workingNumber))
                     {
                         cd.cmdType = CmdData.CmdType.Err02;
                         retCmd = GetReturnCommand(cd);
@@ -377,7 +379,7 @@ namespace SkytraqFinalTestServer
                     }
                     break;
                 case CmdData.CmdType.Load_Start:
-                    if (DoWork(ref cd))
+                    if (DoWork(ref cd, workingNumber))
                     {
                         cd.cmdType = CmdData.CmdType.Err03;
                         retCmd = GetReturnCommand(cd);

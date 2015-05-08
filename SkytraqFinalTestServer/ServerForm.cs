@@ -30,7 +30,9 @@ namespace SkytraqFinalTestServer
 
         private BackgroundWorker[] bwSite = new BackgroundWorker[MaxSiteCount];
         public static WorkerParam[] wpSite = new WorkerParam[MaxSiteCount];
-
+        public string workingNumber;
+        private string logPath;
+        private string logName;
         //Version
         private void ServerForm_Load(object sender, EventArgs e)
         {
@@ -53,6 +55,24 @@ namespace SkytraqFinalTestServer
                 crcValue.Visible = false;
                 workingMode.Visible = false;
             }
+
+            LoginForm form = new LoginForm();
+            if(DialogResult.OK != form.ShowDialog())
+            {
+                this.Close();
+                return;
+            }
+            workingNumber = form.workNo.Text;
+            logPath = System.Environment.CurrentDirectory + "\\Log\\" + workingNumber;
+            try
+            {
+                Directory.CreateDirectory(logPath);
+            }
+            catch
+            {
+                MessageBox.Show("無法建立Log目錄！", "警告", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+
         }
 
         //背景執行
@@ -61,7 +81,7 @@ namespace SkytraqFinalTestServer
             Stopwatch w = new Stopwatch();
             w.Start();
 
-            server = new TcpServer();
+            server = new TcpServer(workingNumber);
             server.ListenToConnection(Convert.ToInt32(port.Text));
             e.Cancel = true;
 
@@ -147,12 +167,6 @@ namespace SkytraqFinalTestServer
         }
         public static TestType testType = TestType.AllPass;
 
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void allPass_CheckedChanged(object sender, EventArgs e)
         {
             testType = TestType.AllPass;
@@ -198,11 +212,16 @@ namespace SkytraqFinalTestServer
             {
                 consoleMsg.TopIndex = consoleMsg.Items.Count - (int)(consoleMsg.Height / consoleMsg.ItemHeight);
             }
-            string logPath = System.Environment.CurrentDirectory + "\\SkytraqStServer.log";
 
-            StreamWriter w = File.AppendText(logPath);
-            w.WriteLine("{0} {1} {2}", DateTime.Now.ToLongTimeString(),
-            DateTime.Now.ToLongDateString(), s);
+            // 20150507 Spec form Angus.
+            //4. Log file檔名之格式為 " A5xx-xxxxxxxxxxx_V8XX_20150506_140520.log”,檔名上顯示日期及時間.
+            if (logName == null)
+            {
+                Module mod = typeof(ServerForm).Assembly.GetModules()[0];
+                logName = workingNumber + "_" + mod.Name.Substring(0, 4) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_Server.log";
+            }
+            StreamWriter w = File.AppendText(logPath + "\\" + logName);
+            w.WriteLine("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s);
             w.Close();
         }
     }

@@ -105,7 +105,7 @@ namespace FinalTestV8
     [Synchronization]
     public class SkytraqGps
     {
-        SerialPort serial;
+        private SerialPort serial = null;
 
         private CultureInfo enUsCulture = CultureInfo.GetCultureInfo("en-US");
 
@@ -135,6 +135,11 @@ namespace FinalTestV8
         #region UART function
         public GPS_RESPONSE Open(string com, int baudrateIdx)
         {
+            if (serial != null && serial.IsOpen)
+            {
+                serial.Close();
+            }
+
             serial = new SerialPort(com, GpsBaudRateConverter.Index2BaudRate(baudrateIdx));
             try
             {
@@ -158,9 +163,12 @@ namespace FinalTestV8
 
         public GPS_RESPONSE Close()
         {
-            if (serial.IsOpen)
+            if (serial!= null && serial.IsOpen)
             {
                 serial.Close();
+                serial.Dispose();
+                serial = null;
+                return GPS_RESPONSE.UART_OK;
             }
             return GPS_RESPONSE.NONE;
         }

@@ -11,6 +11,8 @@ namespace SkytraqFinalTestServer
     public class HandleClient
     {
         private TcpClient mTcpClient;
+        private string workingNumber;
+
         public static void AddMessage(string msg)
         {
             WorkerReportParam r = new WorkerReportParam();
@@ -27,9 +29,10 @@ namespace SkytraqFinalTestServer
             ServerForm.wp.bw.ReportProgress(0, new WorkerReportParam(r));
         }
         
-        public HandleClient(TcpClient _tmpTcpClient)
+        public HandleClient(TcpClient _tmpTcpClient, string w)
         {
             this.mTcpClient = _tmpTcpClient;
+            workingNumber = w;
         }
 
         public void Communicate()
@@ -41,7 +44,7 @@ namespace SkytraqFinalTestServer
                 {
                     GpsTester g = new GpsTester();
                     //g.DoCommand(msg);
-                    string retCmd = g.DoCommand(msg, mTcpClient);
+                    string retCmd = g.DoCommand(msg, mTcpClient, workingNumber);
                     if (retCmd.Length != 0)
                     {
                         CommunicationBase.SendMsg(retCmd, this.mTcpClient);
@@ -67,6 +70,12 @@ namespace SkytraqFinalTestServer
 
     class TcpServer
     {
+        public TcpServer(string w)
+        {
+            workingNumber = w;
+        }
+        private string workingNumber;        
+        
         public static void AddMessage(string msg)
         {
             WorkerReportParam r = new WorkerReportParam();
@@ -141,7 +150,7 @@ namespace SkytraqFinalTestServer
                         {
                             //Console.WriteLine("連線成功!");
                             AddMessage("Client connected...");
-                            HandleClient handleClient = new HandleClient(tmpTcpClient);
+                            HandleClient handleClient = new HandleClient(tmpTcpClient, workingNumber);
                             Thread myThread = new Thread(new ThreadStart(handleClient.Communicate));
                             numberOfClients += 1;
                             myThread.IsBackground = true;

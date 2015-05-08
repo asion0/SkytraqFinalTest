@@ -24,11 +24,11 @@ namespace SkytraqFinalTestServer
 #if _V815_
                 testingType = TestingType.V815;
 #elif _V816_
-            testingType = TestingType.V816;
+                testingType = TestingType.V816;
 #elif _V822_
-            testingType = TestingType.V822;
+                testingType = TestingType.V822;
 #else
-            testingType = TestingType.Generic;
+                testingType = TestingType.Generic;
 #endif
             }
 

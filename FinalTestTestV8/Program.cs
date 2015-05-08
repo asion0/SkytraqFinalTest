@@ -19,6 +19,7 @@ namespace FinalTestV8
         public static int siteNumber;
         public static string duts;
         public static string module;
+        public static string workingNumber;
 
         [STAThread]
         static void Main(string[] args)
@@ -39,8 +40,11 @@ namespace FinalTestV8
             if (args.Length > 2)
             {
                 profilePath = args[3];
+            }
+            if (args.Length > 3)
+            {
+                workingNumber = args[4];
             } 
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FinalTestForm());

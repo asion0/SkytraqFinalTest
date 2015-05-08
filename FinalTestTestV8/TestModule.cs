@@ -143,7 +143,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.OpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+                //EndProcess(p);
                 return false;
             }
             else
@@ -171,7 +171,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -192,7 +192,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ConfigMessageOutputNack : WorkerParam.ErrorType.ConfigMessageOutputTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -208,7 +208,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ConfigNmeaOutputNack : WorkerParam.ErrorType.ConfigNmeaOutputTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -241,7 +241,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -257,7 +257,7 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
+//                    EndProcess(p);
                     return false;
                 }
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
@@ -268,7 +268,7 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = WorkerParam.ErrorType.CheckRtcError;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
+//                    EndProcess(p);
                     return false;
                 }
                 else
@@ -285,6 +285,9 @@ namespace FinalTestV8
         {
             bool testPass = false;
             bool fixPass = false;
+            GpsMsgParser.ParsingStatus.sateInfo lastSateInfo = new GpsMsgParser.ParsingStatus.sateInfo();
+            lastSateInfo.snr = 0;
+            lastSateInfo.prn = 0;
             do
             {
                 byte[] buff = new byte[256];
@@ -302,6 +305,7 @@ namespace FinalTestV8
                         for (int i = 0; i < GpsMsgParser.ParsingStatus.MaxSattellite; i++)
                         {
                             GpsMsgParser.ParsingStatus.sateInfo s = p.parser.parsingStat.GetGpsSate(i);
+                            
                             if (s.prn == GpsMsgParser.ParsingStatus.NullValue)
                             {
                                 break;
@@ -319,6 +323,15 @@ namespace FinalTestV8
 
                                 testPass = true;
                                 break;
+                            }
+                            else
+                            {
+                                if(s.snr > 0 && s.snr > lastSateInfo.snr)
+                                {
+                                    lastSateInfo.snr = s.snr;
+                                    lastSateInfo.prn = s.prn;
+                                    lastSateInfo.inUse = s.inUse;
+                                }
                             }
                         }
                         if (testPass)
@@ -344,9 +357,15 @@ namespace FinalTestV8
 
             if (!testPass)
             {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Prn:" + lastSateInfo.prn.ToString() + " Max SNR:" + lastSateInfo.snr.ToString() + " test fail";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+            }
+
+            if (!testPass)
+            {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.SnrError;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
             return testPass;
         }
@@ -359,7 +378,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -386,7 +405,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.LoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -401,7 +420,7 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = WorkerParam.ErrorType.UploadLoaderFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
+//                    EndProcess(p);
                     return false;
                 }
 
@@ -453,7 +472,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.IoTestFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -474,7 +493,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.FactoryResetNack : WorkerParam.ErrorType.FactoryResetTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -503,7 +522,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.OpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             else
@@ -610,7 +629,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (fixPass) ? WorkerParam.ErrorType.NmeaError : WorkerParam.ErrorType.SnrError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//                EndProcess(p);
             }  
             else
             {
@@ -627,7 +646,7 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.FactoryResetNack : WorkerParam.ErrorType.FactoryResetTimeOut;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
+//                    EndProcess(p);
                     return false;
                 }
                 else
@@ -642,7 +661,7 @@ namespace FinalTestV8
             r.reportType = WorkerReportParam.ReportType.ShowFinished;
             p.error = WorkerParam.ErrorType.NoError;
             p.bw.ReportProgress(0, new WorkerReportParam(r));
-            EndProcess(p);
+//            EndProcess(p);
             return true;
         }
 
@@ -660,20 +679,20 @@ namespace FinalTestV8
 
             if (!DoColdStart(p, r, 3))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
 
             if (!DoIoSrecTest(p, r, Properties.Resources.V822TesterSrec, "", 5000))
             {
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
 
@@ -681,14 +700,14 @@ namespace FinalTestV8
 
             if (!DoFactoryReset(p, r))
             {
-                EndProcess(p);
+//             EndProcess(p);
                 return false;
             }
             
             r.reportType = WorkerReportParam.ReportType.ShowFinished;
             p.error = WorkerParam.ErrorType.NoError;
             p.bw.ReportProgress(0, new WorkerReportParam(r));
-            EndProcess(p);
+//          EndProcess(p);
             return true;
         }
 
@@ -708,7 +727,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.OpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
             else
@@ -721,13 +740,13 @@ namespace FinalTestV8
 
             if (!DoColdStart(p, r, 3))
             {
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             } 
 
             if (s == V816Set.Set1 && !TestRtc(p, r))
             {
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
 
@@ -791,7 +810,7 @@ namespace FinalTestV8
 
             if (!p.bw.CancellationPending && !DoFactoryReset(p, r))
             {
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
 
@@ -807,7 +826,7 @@ namespace FinalTestV8
                 p.error = WorkerParam.ErrorType.NoError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
-            EndProcess(p);
+//          EndProcess(p);
             return true;
         }
 
@@ -830,14 +849,15 @@ namespace FinalTestV8
                 return false;
             }
 
-            r.reportType = WorkerReportParam.ReportType.ShowProgress;
-            r.output = "Scanning " + p.comPort + " baud rate...";
-            p.bw.ReportProgress(0, new WorkerReportParam(r));
+            //r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            //r.output = "Scanning " + p.comPort + " baud rate...";
+            //p.bw.ReportProgress(0, new WorkerReportParam(r));
 
             // Retry three times for disable auto uart firmware, it'll 
             // change uart output baud rate after 5 seconds.
-            int baudIdx = -1;
+            //int baudIdx = -1;
             lastDeviceBaudIdx = 5;      //V822 boot in ROM mode 115200 bps.
+            /*  //Disable scan baud rate 20150506
             for (int i = 0; i < 3; ++i)
             {
                 baudIdx = ScanBaudRate(p, r, lastDeviceBaudIdx);
@@ -853,7 +873,17 @@ namespace FinalTestV8
                 }
                 Thread.Sleep(50);
             }
+            */
+            rep = p.gps.Open(p.comPort, lastDeviceBaudIdx);
+            if (GPS_RESPONSE.UART_OK != rep)
+            {   //This com port can't open.
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                return false;
+            }
 
+            /*
             if (-1 == baudIdx)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
@@ -862,7 +892,7 @@ namespace FinalTestV8
                 EndProcess(p);
                 return false;
             }
-
+            */
             //20150225 Always use external loader in download.
             //20150330 Do change baud rate in loader.
             /*
@@ -892,7 +922,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.LoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
             else
@@ -914,7 +944,7 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = WorkerParam.ErrorType.UploadLoaderFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
+//                  EndProcess(p);
                     return false;
                 }  
 
@@ -933,7 +963,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.OpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
             else
@@ -971,7 +1001,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.BinsizeCmdTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
             else
@@ -1017,7 +1047,7 @@ namespace FinalTestV8
                         r.reportType = WorkerReportParam.ReportType.ShowError;
                         p.error = WorkerParam.ErrorType.DownloadWriteFail;
                         p.bw.ReportProgress(0, new WorkerReportParam(r));
-                        EndProcess(p);
+//                      EndProcess(p);
                         return false;
                     }
                     r.reportType = WorkerReportParam.ReportType.ShowProgress;
@@ -1038,7 +1068,7 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.DownloadEndTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
+//              EndProcess(p);
                 return false;
             }
             else
@@ -1051,7 +1081,7 @@ namespace FinalTestV8
                 p.error = WorkerParam.ErrorType.NoError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
-            EndProcess(p);
+//          EndProcess(p);
             return true;
         }
 
@@ -1072,45 +1102,45 @@ namespace FinalTestV8
 
             if (!DoColdStart(p, r, 3))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!TestRtc(p, r))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!DoNmeaPrepareCommand(p, r))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }            
 
             bool testPass = TestSnr(p, r, ref sw, p.profile.v828SnrBoundL, p.profile.v828SnrBoundU, p.profile.v828TestDuration * 1000);
             if (!testPass)
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
             //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!DoIoSrecTest(p, r, Properties.Resources.IoTesterSrec, "TEST01 = 0003 0006 001C 001D 031E 031F 1C00 1D1C ", 5000))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             ReopenDevice(p, r, baudIdx, 1000);
             if (!DoFactoryReset(p, r))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
@@ -1121,7 +1151,7 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
 
-            EndProcess(p);
+//            EndProcess(p);
             return true;
         }
         
@@ -1141,39 +1171,39 @@ namespace FinalTestV8
 
             if (!DoColdStart(p, r, 3))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!TestRtc(p, r))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!DoNmeaPrepareCommand(p, r))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             bool testPass = TestSnr(p, r, ref sw, p.profile.v838SnrBoundL, p.profile.v838SnrBoundU, p.profile.v838TestDuration * 1000);
             if (!testPass)
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
             if (!DoIoSrecTest(p, r, Properties.Resources.IoTesterSrec, "TEST01 = 0001 000F 0119 1C1D 0C0D 0E16 0809 151B 100F 1406 0002 181A 1807 0B0A 0B17 031E 031F ", 5000))
             {
-                EndProcess(p);
+//                EndProcess(p);
                 return false;
             }
 
@@ -1181,7 +1211,7 @@ namespace FinalTestV8
 
             if (!DoFactoryReset(p, r))
             {
-                EndProcess(p);
+                //EndProcess(p);
                 return false;
             }
 
@@ -1192,11 +1222,11 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
 
-            EndProcess(p);
+            //EndProcess(p);
             return true;
         }
 
-        private void EndProcess(WorkerParam p)
+        public void EndProcess(WorkerParam p)
         {
             p.gps.Close();
         }    

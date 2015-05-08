@@ -13,6 +13,7 @@ using Microsoft.Win32.SafeHandles;
 using System.Diagnostics;
 using System.Xml;
 using System.IO;
+using System.Reflection;
 
 namespace FinalTestV8
 {
@@ -25,12 +26,12 @@ namespace FinalTestV8
             Global.Init();
         }
 
-        string[] logPath = new string[4];
+        string[] logPostName = new string[4];
         private void FinalTestForm_Load(object sender, EventArgs e)
         {
             for(int i=0; i<4; i++)
             {
-                logPath[i] = System.Environment.CurrentDirectory + "\\Site" + Program.siteNumber.ToString() +
+                logPostName[i] = "_Site" + Program.siteNumber.ToString() +
                     "-" + (i + 1).ToString() + ".log";
             }
 
@@ -454,7 +455,6 @@ namespace FinalTestV8
                 }
             }
             moduleName.Text = Program.module;
-
         }
 
         private void InitMainForm()
@@ -693,6 +693,8 @@ namespace FinalTestV8
              }
         }
 
+        private string logPath = System.Environment.CurrentDirectory + "\\Log\\" + Program.workingNumber;
+        private string logName;
         private void AddMessage(int i, String s)
         {
             ListBox b = messageTable[i] as ListBox;
@@ -705,16 +707,23 @@ namespace FinalTestV8
             }
             testParam[i].log.AppendLine(s);
 
-            StreamWriter w = File.AppendText(logPath[i]);
+            // 20150507 Spec form Angus.
+            //4. Log file檔名之格式為 " A5xx-xxxxxxxxxxx_V8XX_20150506_140520.log”,檔名上顯示日期及時間.
+            
+
+            if (logName == null)
+            {
+                logName = Program.workingNumber + "_" + Program.module + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + logPostName[i];
+            }
+
+            StreamWriter w = File.AppendText(logPath + "\\" + logName);
             if (s[s.Length - 1] == '\n')
             {
-                w.Write("{0} {1} {2}", DateTime.Now.ToLongTimeString(),
-                DateTime.Now.ToLongDateString(), s);
+                w.Write("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s);
             }
             else
             {
-                w.WriteLine("{0} {1} {2}", DateTime.Now.ToLongTimeString(),
-                DateTime.Now.ToLongDateString(), s);
+                w.WriteLine("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s);
             } 
             w.Close();
         }
@@ -826,6 +835,7 @@ namespace FinalTestV8
             {
                 //e.Cancel = t.DoTest(p);
             }
+            t.EndProcess(p);
             p.duration = w.ElapsedMilliseconds;
             w.Stop();
         }
