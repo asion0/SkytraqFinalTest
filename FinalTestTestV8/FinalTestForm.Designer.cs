@@ -141,7 +141,6 @@
             this.a1Disable.TabIndex = 0;
             this.a1Disable.Text = "Disable Device A1";
             this.a1Disable.UseVisualStyleBackColor = true;
-            this.a1Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // a1Panel
             // 
@@ -205,7 +204,6 @@
             this.b1Disable.TabIndex = 0;
             this.b1Disable.Text = "Disable Device B1";
             this.b1Disable.UseVisualStyleBackColor = true;
-            this.b1Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // b1Panel
             // 
@@ -269,7 +267,6 @@
             this.a2Disable.TabIndex = 0;
             this.a2Disable.Text = "Disable Device A2";
             this.a2Disable.UseVisualStyleBackColor = true;
-            this.a2Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // b2Disable
             // 
@@ -280,7 +277,6 @@
             this.b2Disable.TabIndex = 0;
             this.b2Disable.Text = "Disable Device B2";
             this.b2Disable.UseVisualStyleBackColor = true;
-            this.b2Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // a2Panel
             // 
@@ -397,7 +393,6 @@
             this.a3Disable.TabIndex = 0;
             this.a3Disable.Text = "Disable Device A3";
             this.a3Disable.UseVisualStyleBackColor = true;
-            this.a3Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // b3Disable
             // 
@@ -408,7 +403,6 @@
             this.b3Disable.TabIndex = 0;
             this.b3Disable.Text = "Disable Device B3";
             this.b3Disable.UseVisualStyleBackColor = true;
-            this.b3Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // a3Panel
             // 
@@ -525,7 +519,6 @@
             this.a4Disable.TabIndex = 0;
             this.a4Disable.Text = "Disable Device A4";
             this.a4Disable.UseVisualStyleBackColor = true;
-            this.a4Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // b4Disable
             // 
@@ -536,7 +529,6 @@
             this.b4Disable.TabIndex = 0;
             this.b4Disable.Text = "Disable Device B4";
             this.b4Disable.UseVisualStyleBackColor = true;
-            this.b4Disable.CheckedChanged += new System.EventHandler(this.disable_CheckedChanged);
             // 
             // a4Panel
             // 

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SkytraqFinalTestServer")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -58,6 +58,10 @@ using System.Runtime.InteropServices;
 // 1.0.0.028 - Fix close port issue.
 // 1.0.0.029 - Change download loader for change baud rate.
 // 1.0.0.030 - Change log format.
+// 1.0.0.031 - Update to FinalTestV8 1.0.0.031.
+// 1.0.0.032 - Add wait NMEA after change baud rate.
+// 1.0.0.033 - Support clock offset test in V828
+// 1.0.0.034 - Modify V828 Test flow.
 
-[assembly: AssemblyVersion("1.0.0.030")]
-[assembly: AssemblyFileVersion("1.0.0.030")]
+[assembly: AssemblyVersion("1.0.0.034")]
+[assembly: AssemblyFileVersion("1.0.0.034")]

@@ -11,7 +11,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("FinalTestV8")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,8 +33,6 @@ using System.Resources;
 // 您可以指定所有的值，也可以依照以下的方式，使用 '*' 將組建和修訂編號
 // 指定為預設值:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.030")]
-[assembly: AssemblyFileVersion("1.0.0.030")]
 
 // 1.0.0.01 - first version.
 // 1.0.0.02 - Does not save default setting avoid exception.
@@ -59,5 +57,11 @@ using System.Resources;
 // 1.0.0.028 - Adjust BoostBaud conditions in V828 Download.
 // 1.0.0.029 - Change download loader for baud rate change.
 // 1.0.0.030 - Change log format and COM port close method.
+// 1.0.0.031 - Fixed disable check issue and SNR test fail issue.
+// 1.0.0.032 - Add wait NMEA after change baud rate.
+// 1.0.0.033 - Support V828 clock offset test.
+// 1.0.0.034 - Modify V828 Test flow.
 
+[assembly: AssemblyVersion("1.0.0.034")]
+[assembly: AssemblyFileVersion("1.0.0.034")]
 [assembly: NeutralResourcesLanguageAttribute("")]

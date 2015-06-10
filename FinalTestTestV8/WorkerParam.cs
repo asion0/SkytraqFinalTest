@@ -38,10 +38,13 @@ namespace FinalTestV8
             DownloadWriteFail = 1UL << 26,
             DownloadEndTimeOut = 1UL << 27,
             NoDownloadBinFile = 1UL << 28,
+            CommandNoneAck = 1UL << 29,
+            CommandTimeout = 1UL << 30,
+            CheckClockOffsetFail = 1UL << 31,
 
-            TestNotComplete = (ulong)1 << 29,
+            TestNotComplete = (ulong)1 << 32,
         }
-        public const int ErrorCount = 30;
+        public const int ErrorCount = 32;
 
         public static String GetErrorString(ErrorType er)
         {

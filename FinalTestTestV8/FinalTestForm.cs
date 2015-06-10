@@ -37,6 +37,24 @@ namespace FinalTestV8
 
             profile = new FinalTest3Profile(Program.siteNumber, Program.profilePath);
             this.Icon = Properties.Resources.FinalTest3;
+
+            initBackgroundWorker();
+
+            const string keyPath = "Software\\Skytraq\\FinalTestV8";
+            string siteAckKey = "SiteAck" + Program.siteNumber.ToString();
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(keyPath);
+            if (key != null)
+            {
+                key.SetValue(siteAckKey, "Ready", Microsoft.Win32.RegistryValueKind.String);
+            }
+
+            testTimer.Tick += new EventHandler(TimerEventProcessor);
+            cmdTimer.Tick += new EventHandler(TimerEventProcessor);
+            cmdTimer.Interval = 100;
+            cmdTimer.Start();
+
+            key.Close(); 
             DoLogin();
         }
 
@@ -217,8 +235,8 @@ namespace FinalTestV8
             switch (r)
             {
                 case ResultDisplayType.None:
-                    l.Text = "";
-                    l.ForeColor = System.Drawing.Color.Black;
+                    l.Text = "Not using";
+                    l.ForeColor = System.Drawing.Color.Gray;
                     break;
                 case ResultDisplayType.Testing:
                     l.Text = "Testing...";
@@ -459,13 +477,7 @@ namespace FinalTestV8
 
         private void InitMainForm()
         {
-            drawFormat.Alignment = StringAlignment.Center;
-
             //Establish UI controls table
-            disableTable = new CheckBox[ModuleCount] { a1Disable, a2Disable, a3Disable, a4Disable, 
-                b1Disable, b2Disable, b3Disable, b4Disable };
-            comSelTable = new ComboBox[ModuleCount] { a1ComSel, a2ComSel, a3ComSel, a4ComSel, 
-                b1ComSel, b2ComSel, b3ComSel, b4ComSel };
             panelTable = new Panel[ModuleCount] { a1Panel, a2Panel, a3Panel, a4Panel, 
                 b1Panel, b2Panel, b3Panel, b4Panel };
             resultTable = new Label[ModuleCount] { a1Result, a2Result, a3Result, a4Result, 
@@ -473,8 +485,7 @@ namespace FinalTestV8
             messageTable = new ListBox[ModuleCount] { a1Message, a2Message, a3Message, a4Message, 
                 b1Message, b2Message, b3Message, b4Message };
 
-            failCount = new int[ModuleCount];
-            passCount = new int[ModuleCount];
+            drawFormat.Alignment = StringAlignment.Center;
 
             failTable = new Label[ModuleCount] { a1FailCount, a2FailCount, a3FailCount, a4FailCount, 
                 b1FailCount, b2FailCount, b3FailCount, b4FailCount };
@@ -485,39 +496,38 @@ namespace FinalTestV8
             yieldTable = new Label[ModuleCount] { a1Yield, a2Yield, a3Yield, a4Yield, 
                             b1Yield, b2Yield, b3Yield, b4Yield };
 
+            disableTable = new CheckBox[ModuleCount] { a1Disable, a2Disable, a3Disable, a4Disable, 
+                b1Disable, b2Disable, b3Disable, b4Disable };
+
+            comSelTable = new ComboBox[ModuleCount] { a1ComSel, a2ComSel, a3ComSel, a4ComSel, 
+                b1ComSel, b2ComSel, b3ComSel, b4ComSel };
+
+            failCount = new int[ModuleCount];
+            passCount = new int[ModuleCount];
+
             for (int i = 0; i < 8; ++i)
             {
-                if (Program.duts[7 - i] == '1')
+                disableTable[i].Enabled = false;
+                try
                 {
-                    try
-                    {
-                        comSelTable[i].Items.Add(profile.DutsPort[i]);
-                        comSelTable[i].SelectedIndex = 0;
-                        comSelTable[i].Enabled = false;
-                    }
-                    catch
-                    {
-                    }
-                    disableTable[i].Enabled = false;
-                    disableTable[i].Checked = false;
+                    comSelTable[i].Items.Add(profile.DutsPort[i]);
+                    comSelTable[i].SelectedIndex = 0;
+                    comSelTable[i].Enabled = false;
+                }
+                catch
+                {
                 }
             }
 
-            initBackgroundWorker();
-            testTimer.Tick += new EventHandler(TimerEventProcessor);
-            cmdTimer.Tick += new EventHandler(TimerEventProcessor);
-            cmdTimer.Interval = 100;
-            cmdTimer.Start();
+            SetDisableAndCom(Program.duts);
+        }
 
-            const string keyPath = "Software\\Skytraq\\FinalTestV8";
-            string siteAckKey = "SiteAck" + Program.siteNumber.ToString();
-            Microsoft.Win32.RegistryKey key;
-            key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(keyPath);
-            if (key != null)
+        private void SetDisableAndCom(string s)
+        {
+            for (int i = 0; i < 8; ++i)
             {
-                key.SetValue(siteAckKey, "Ready", Microsoft.Win32.RegistryValueKind.String);
+                disableTable[i].Checked = (s[7 - i] != '1');
             }
-            key.Close();
         }
 
         private void SendResult()
@@ -537,11 +547,6 @@ namespace FinalTestV8
                 key.SetValue(siteAckKey, ack, Microsoft.Win32.RegistryValueKind.String);
             }
             key.Close();
-        }
-
-        private void EnableButton(bool e)
-        {
-
         }
 
         private int FindIndex(object sender)
@@ -597,6 +602,7 @@ namespace FinalTestV8
 
                 return;
             }
+
             if (!CheckTestBusy(false))
             {
                 CancelTest(false);
@@ -605,25 +611,13 @@ namespace FinalTestV8
             StopTesting();
         }
 
-        private void disable_CheckedChanged(object sender, EventArgs e)
-        {
-            /*
-            int index = FindIndex(sender);
-            (panelTable[index] as Panel).Enabled = !(sender as CheckBox).Checked;
-            UpdateSettingByUI();
-            FinalTestV8.Properties.Settings.Default.Save();
-             * */
-        }
-
         private void comSel_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateSettingByUI();
-            //FinalTestV8.Properties.Settings.Default.Save();
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            //FinalTestV8.Properties.Settings.Default.Save();
         }
 
         private BackgroundWorker[] bkWorker = new BackgroundWorker[ModuleCount];
@@ -700,7 +694,16 @@ namespace FinalTestV8
             ListBox b = messageTable[i] as ListBox;
 
             bool scroll = (b.TopIndex == b.Items.Count - (int)(b.Height / b.ItemHeight));
-            b.Items.Add(s);
+            const int TrimSize = 64;
+            if (s.Length > TrimSize)
+            {
+                b.Items.Add(s.Substring(0, TrimSize));
+            }
+            else
+            {
+                b.Items.Add(s);
+            }
+
             if (scroll)
             {
                 b.TopIndex = b.Items.Count - (int)(b.Height / b.ItemHeight);
@@ -709,21 +712,19 @@ namespace FinalTestV8
 
             // 20150507 Spec form Angus.
             //4. Log file檔名之格式為 " A5xx-xxxxxxxxxxx_V8XX_20150506_140520.log”,檔名上顯示日期及時間.
-            
-
             if (logName == null)
             {
-                logName = Program.workingNumber + "_" + Program.module + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + logPostName[i];
+                logName = Program.workingNumber + "_" + Program.module + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
             }
 
-            StreamWriter w = File.AppendText(logPath + "\\" + logName);
+            StreamWriter w = File.AppendText(logPath + "\\" + logName + logPostName[i]);
             if (s[s.Length - 1] == '\n')
             {
-                w.Write("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s);
+                w.Write("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s.Replace("\r\n", "_"));
             }
             else
             {
-                w.WriteLine("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s);
+                w.WriteLine("{0} {1}", DateTime.Now.ToString("HH:mm:ss"), s.Replace("\r\n", "_"));
             } 
             w.Close();
         }
@@ -748,19 +749,19 @@ namespace FinalTestV8
         {
             rp.NewSession(SessionReport.SessionType.Testing);
             string duts = s.Substring(2, s.Length - 2);
+            if (Program.duts != duts)
+            {
+                Program.duts = duts;
+                SetDisableAndCom(Program.duts);
+            }
+
             for (int i = 0; i < ModuleCount; i++)
             {
-                if (duts[7 - i] != '1')
-                {
-                    disableTable[i].Checked = true;
-                    continue;
-                }
-                disableTable[i].Checked = false;
-
                 testParam[i].comPort = (comSelTable[i] as ComboBox).Text;
                 testParam[i].profile = profile;
                 testParam[i].log.Remove(0, testParam[i].log.Length);
                 testParam[i].cmd = s[0];
+
                 if (Program.module == "V822" || Program.module == "V828" || Program.module == "V838")
                 {
                     testParam[i].fwProfile = fwProfile;
@@ -768,13 +769,21 @@ namespace FinalTestV8
 
                 if (s[0] == 'L')
                 {
-                    SetResultDisplay(resultTable[i] as Label, ResultDisplayType.Downloading);
+                    SetResultDisplay(resultTable[i] as Label, (duts[7 - i] == '1') ? ResultDisplayType.Downloading : ResultDisplayType.None);
                 }
                 else
                 {
-                    SetResultDisplay(resultTable[i] as Label, ResultDisplayType.Testing);
+                    SetResultDisplay(resultTable[i] as Label, (duts[7 - i] == '1') ? ResultDisplayType.Testing : ResultDisplayType.None);
                 }
             }
+
+            TestRunning = TestStatus.Testing;
+            testingDuts = duts;
+            for(int i=0; i<ModuleCount; ++i)
+            {
+                testingResult[i] = 0;
+            }
+
 
             //TestModule.ClearResult();
             for (int i = 0; i < ModuleCount; i++)
@@ -784,13 +793,7 @@ namespace FinalTestV8
                     continue;
                 }
                 bkWorker[i].RunWorkerAsync(testParam[i]);
-            }
-            TestRunning = TestStatus.Testing;
-            testingDuts = duts;
-            for(int i=0; i<ModuleCount; ++i)
-            {
-                testingResult[i] = 0;
-            }
+            } 
             return false;
         }
 
@@ -881,7 +884,6 @@ namespace FinalTestV8
             if (0 == busyCount)
             {   //All task is done
                 TestRunning = TestStatus.Finished;
-                EnableButton(true);
                 SendResult();
             }
         }

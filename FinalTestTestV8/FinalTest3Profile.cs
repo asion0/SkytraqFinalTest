@@ -32,6 +32,7 @@ namespace FinalTestV8
         public int v828SnrBoundU = 45;
         public int v828SnrBoundL = 40;
         public int v828TestDuration = 10;
+        public int v828TestClockOffset = 0;
         //Param for V838 Test
         public int v838SnrBoundU = 45;
         public int v838SnrBoundL = 40;
@@ -91,6 +92,8 @@ namespace FinalTestV8
                 v828SnrBoundL = Convert.ToInt32(temp.ToString());
                 n = GetPrivateProfileString("V828", "TEST_DURATION", "10", temp, 255, path);
                 v828TestDuration = Convert.ToInt32(temp.ToString());
+                n = GetPrivateProfileString("V828", "TEST_CLOCK_OFFSET", "0", temp, 255, path);
+                v828TestClockOffset = Convert.ToInt32(temp.ToString());
             }
 
             if (Program.module == "V838")

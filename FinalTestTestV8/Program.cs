@@ -29,22 +29,26 @@ namespace FinalTestV8
             {
                 module = args[0];
             }
-            if (args.Length > 0)
+            if (args.Length > 1)
             {
                 siteNumber = Convert.ToInt32(args[1]);
             }
-            if (args.Length > 1)
+            if (args.Length > 2)
             {
                 duts = args[2];
             }
-            if (args.Length > 2)
+            if (args.Length > 3)
             {
                 profilePath = args[3];
             }
-            if (args.Length > 3)
+            if (args.Length > 4)
             {
                 workingNumber = args[4];
-            } 
+            }
+            else
+            {
+                workingNumber = "A000-00000000000";
+            }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FinalTestForm());

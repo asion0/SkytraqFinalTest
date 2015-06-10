@@ -143,16 +143,24 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.OpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                //EndProcess(p);
                 return false;
             }
             else
             {
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Open " + p.comPort + " in " +
-                    p.gps.GetBaudRate().ToString() + " success.";
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                long timeout = 5000;
+                if (!WaitOneNmea(p, ref timeout))
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = WorkerParam.ErrorType.NmeaError;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    return false;
+                }
             }
+
+            r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            r.output = "Open " + p.comPort + " in " +
+                p.gps.GetBaudRate().ToString() + " success.";
+            p.bw.ReportProgress(0, new WorkerReportParam(r)); 
             return true;
         }
 
@@ -241,7 +249,6 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -250,14 +257,13 @@ namespace FinalTestV8
                 r.output = "Get RTC1 " + rtc1.ToString();
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
 
-                Thread.Sleep(1010);
+                Thread.Sleep(1050);
                 rep = p.gps.QueryRtc(ref rtc2);
                 if (GPS_RESPONSE.ACK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                    EndProcess(p);
                     return false;
                 }
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
@@ -268,7 +274,6 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = WorkerParam.ErrorType.CheckRtcError;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                    EndProcess(p);
                     return false;
                 }
                 else
@@ -288,6 +293,7 @@ namespace FinalTestV8
             GpsMsgParser.ParsingStatus.sateInfo lastSateInfo = new GpsMsgParser.ParsingStatus.sateInfo();
             lastSateInfo.snr = 0;
             lastSateInfo.prn = 0;
+            p.parser.parsingStat.ClearAllSate();
             do
             {
                 byte[] buff = new byte[256];
@@ -366,26 +372,136 @@ namespace FinalTestV8
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.SnrError;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
             return testPass;
         }
-        
+
+        private bool DoClockOffsetTest(WorkerParam p, WorkerReportParam r)
+        {
+            UInt32 prn = 0;
+            UInt32 freq = 0;
+            Int32 clkData = 0;
+            Int64 clkAll = 0;
+            Int64 count = 0;
+            for (byte i = 0; i < 1; ++i)
+            {
+                GPS_RESPONSE rep = p.gps.QueryChannelDoppler(i, ref prn, ref freq);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.CommandNoneAck : WorkerParam.ErrorType.CommandTimeout;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    return false;
+                }
+
+                if (prn == 0xFFFF || freq == 0xFFFF)
+                {
+                    continue;
+                }
+
+                rep = p.gps.QueryChannelClockOffset(0, prn, 0, ref clkData);
+                if (GPS_RESPONSE.ACK != rep)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.CommandNoneAck : WorkerParam.ErrorType.CommandTimeout;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    return false;
+                }
+
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "No:" + i.ToString() + " Clk:" + clkData.ToString() + " Prn:" + prn.ToString();
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                clkAll += clkData;
+                ++count;
+            }
+
+            if (count == 0)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "No active channel to test clock offset";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.CheckClockOffsetFail;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                return false;
+            }
+
+            double clkPpm = clkAll / count / (96.25 * 16.367667);
+            r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            r.output = "Average Clock Offset:" + (clkAll / count).ToString() + "(" + clkPpm.ToString("F2") + " ppm)";
+            p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+            if (clkPpm > 2.5 || clkPpm < -2.5)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.CheckClockOffsetFail;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                return false;
+            }
+     
+            r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            r.output = "Check clock offset pass";
+            p.bw.ReportProgress(0, new WorkerReportParam(r));
+    
+            return true;
+        }
+
+        private bool WaitOneNmea(WorkerParam p, ref long timeout)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Reset();
+            sw.Start();
+            while(sw.ElapsedMilliseconds < timeout)
+            {
+                byte[] buff = new byte[256];
+                int l = p.gps.ReadLineNoWait(buff, 256, 1000);
+                string line = Encoding.UTF8.GetString(buff, 0, l);
+                if (GpsMsgParser.CheckNmea(line))
+                {   
+                    timeout = sw.ElapsedMilliseconds;
+                    sw.Stop();
+                    return true;
+                }
+            }
+            timeout = sw.ElapsedMilliseconds;
+            sw.Stop();
+            return false;
+        }
+
         private bool BoostBaudRate(WorkerParam p, WorkerReportParam r, int baudIdx)
         {
-            GPS_RESPONSE rep = p.gps.ChangeBaudrate((byte)baudIdx, 2);
+            GPS_RESPONSE rep = p.gps.ChangeBaudrate((byte)baudIdx, 2, true);
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
             {
+                long timeut = 6000;
+                bool b = WaitOneNmea(p, ref timeut);
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "Change baud rate to " + baudIdx.ToString() + " success";
+                r.output = "Waiting NMEA " + timeut.ToString() + " ms";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+                if (b)
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "Change baud rate to " + GpsBaudRateConverter.Index2BaudRate(baudIdx).ToString() + " success";
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                }
+                else
+                {
+                    r.reportType = WorkerReportParam.ReportType.ShowError;
+                    p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
+                    p.bw.ReportProgress(0, new WorkerReportParam(r));
+                    return false;
+                }
             }
             return true;
         }
@@ -405,7 +521,6 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.LoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -420,7 +535,6 @@ namespace FinalTestV8
                     r.reportType = WorkerReportParam.ReportType.ShowError;
                     p.error = WorkerParam.ErrorType.UploadLoaderFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                    EndProcess(p);
                     return false;
                 }
 
@@ -472,7 +586,6 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.IoTestFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -686,7 +799,6 @@ namespace FinalTestV8
             //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
-//              EndProcess(p);
                 return false;
             }
 
@@ -740,13 +852,11 @@ namespace FinalTestV8
 
             if (!DoColdStart(p, r, 3))
             {
-//              EndProcess(p);
                 return false;
             } 
 
             if (s == V816Set.Set1 && !TestRtc(p, r))
             {
-//              EndProcess(p);
                 return false;
             }
 
@@ -1100,58 +1210,52 @@ namespace FinalTestV8
                 return false;
             }
 
+            if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
+            {
+                return false;
+            }
+
             if (!DoColdStart(p, r, 3))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!TestRtc(p, r))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!DoNmeaPrepareCommand(p, r))
             {
-//                EndProcess(p);
                 return false;
-            }            
+            }
 
             bool testPass = TestSnr(p, r, ref sw, p.profile.v828SnrBoundL, p.profile.v828SnrBoundU, p.profile.v828TestDuration * 1000);
             if (!testPass)
             {
-//                EndProcess(p);
                 return false;
             }
-            //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
-            if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
+
+            if (p.profile.v828TestClockOffset == 1 && !DoClockOffsetTest(p, r))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!DoIoSrecTest(p, r, Properties.Resources.IoTesterSrec, "TEST01 = 0003 0006 001C 001D 031E 031F 1C00 1D1C ", 5000))
             {
-//                EndProcess(p);
                 return false;
             }
 
             ReopenDevice(p, r, baudIdx, 1000);
             if (!DoFactoryReset(p, r))
             {
-//                EndProcess(p);
                 return false;
             }
 
-            if (testPass)
-            {
-                r.reportType = WorkerReportParam.ReportType.ShowFinished;
-                p.error = WorkerParam.ErrorType.NoError;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-            }
+            r.reportType = WorkerReportParam.ReportType.ShowFinished;
+            p.error = WorkerParam.ErrorType.NoError;
+            p.bw.ReportProgress(0, new WorkerReportParam(r));
 
-//            EndProcess(p);
             return true;
         }
         

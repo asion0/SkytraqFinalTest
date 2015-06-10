@@ -311,26 +311,52 @@ namespace FinalTestV8
 
         public GPS_RESPONSE WaitStringAck(int timeout, String waitingFor)
         {
-            const int ReceiveLength = 128;
-            byte[] received = new byte[ReceiveLength];
+            //const int ReceiveLength = 512;
+            //byte[] received = new byte[ReceiveLength];
             byte[] buffer = new byte[1];
-            int index = 0;
+            //int index = 0;
 
             Stopwatch sw = new Stopwatch();
             sw.Reset();
             sw.Start();
-            String ack;
+            //String ack;
+            bool start = false;
+            int ackLen = waitingFor.Length;
+            int iter = 0;
+
             while (sw.ElapsedMilliseconds < timeout)
             {
-                // log.log("wait_ack, gps_readline timeout = {0}", timeout);
-                //len = ReadLineNoWait(buffer, 1);
                 if (serial.BytesToRead > 0)
                 {
-                    if (index >= ReceiveLength)
-                    {
-                        return GPS_RESPONSE.TIMEOUT;
-                    }
+                    //if (index >= ReceiveLength)
+                    //{
+                    //    return GPS_RESPONSE.TIMEOUT;
+                    //}
                     buffer[0] = (byte)serial.ReadByte();
+                    debugSb.Append((char)buffer[0]);
+
+                    if (!start && buffer[0] == waitingFor[0])
+                    {
+                        start = true;
+                    }
+
+                    if(!start)
+                    {
+                        continue;
+                    }
+
+                    if (buffer[0] != waitingFor[iter++])
+                    {
+                        start = false;
+                        iter = 0;
+                        continue;
+                    }
+
+                    if (iter == ackLen)
+                    {
+                        return GPS_RESPONSE.OK;
+                    }
+                    /*
                     received[index] = buffer[0];
                     index++;
 
@@ -344,6 +370,7 @@ namespace FinalTestV8
                         index = 0;
                         received.Initialize();
                     }
+                    */
                 }
                 else
                 {
@@ -411,7 +438,7 @@ namespace FinalTestV8
             return;
         }
 
-        public GPS_RESPONSE ChangeBaudrate(byte baudrateIndex, byte mode)
+        public GPS_RESPONSE ChangeBaudrate(byte baudrateIndex, byte mode, bool noDelay)
         {
             GPS_RESPONSE retval = GPS_RESPONSE.NONE;
             byte[] cmdData = new byte[4];
@@ -424,7 +451,10 @@ namespace FinalTestV8
             retval = SendCmdAck(cmd.GetBuffer(), cmd.Size(), 2000);
             if (retval == GPS_RESPONSE.ACK)
             {
-                Thread.Sleep(1000);
+                if (!noDelay)
+                {
+                    Thread.Sleep(1000);
+                }
                 serial.Close();
                 Open(serial.PortName, baudrateIndex);
             }
@@ -557,7 +587,7 @@ namespace FinalTestV8
             return retval;
         }
 
-        public GPS_RESPONSE QueryChannelClockOffset(UInt32 gdClockOffset, UInt32 prn, UInt32 freq, ref UInt32 clkData)
+        public GPS_RESPONSE QueryChannelClockOffset(Int32 gdClockOffset, UInt32 prn, UInt32 freq, ref Int32 clkData)
         {
             GPS_RESPONSE retval = GPS_RESPONSE.NONE;
             byte[] cmdData = new byte[9];
@@ -578,8 +608,8 @@ namespace FinalTestV8
             {
                 byte[] retCmd = new byte[128];
                 retval = WaitReturnCommand(0xFF, retCmd, 2000);
-                clkData = (UInt32)retCmd[5] << 24 | (UInt32)retCmd[6] << 16 |
-                    (UInt32)retCmd[7] << 8 | (UInt32)retCmd[8];
+                clkData = (Int32)((UInt32)retCmd[5] << 24 | (UInt32)retCmd[6] << 16 |
+                    (UInt32)retCmd[7] << 8 | (UInt32)retCmd[8]);
             }
             return retval;
         }
@@ -796,8 +826,7 @@ namespace FinalTestV8
             cmdData[0] = 0x05;
             cmdData[1] = 0x0;
             cmdData[2] = baudrateIdx;
-            cmdData[3] = 0x02;
-
+            cmdData[3] = 0x00;
 
             BinaryCommand cmd = new BinaryCommand(cmdData);
             retval = SendCmdAck(cmd.GetBuffer(), cmd.Size(), timeout);
@@ -832,25 +861,29 @@ namespace FinalTestV8
 
             retval = SendStringCmdAck(cmd, cmd.Length, 10000, "OK\0");
             return retval;
-        }     
+        }
 
+        private StringBuilder debugSb = new StringBuilder(4096);
         public GPS_RESPONSE SendLoaderDownload(ref String dbgOutput)
         {
             GPS_RESPONSE retval = GPS_RESPONSE.NONE;
             String cmd = "$LOADER DOWNLOAD";
-            //WAIT
-            for (int i = 0; i < 5; ++i)
+            //for (int i = 0; i < 5; ++i)
             {
                 dbgOutput += "send [" + cmd + "];";
+                debugSb.Remove(0, debugSb.Length);
                 retval = SendStringCmdAck(cmd, cmd.Length, 1000, "OK\0");
                 if (GPS_RESPONSE.OK == retval)
                 {
                     dbgOutput += "ack [OK];";
-                    break;
                 }
-                dbgOutput += "send dummy data;";
-                SendDummyCmdNoAck(30);
-                Thread.Sleep(500);
+                else
+                {
+                    dbgOutput += "timeout[";
+                    dbgOutput += debugSb.ToString();
+                    dbgOutput += "]";
+                    retval = GPS_RESPONSE.OK;
+                }
             }
             return retval;
         }
@@ -866,8 +899,6 @@ namespace FinalTestV8
                 String line = l + (char)0x0a;
                 SendStringCmdNoAck(line, line.Length);
             }
-            //retval = SendStringCmdAck(s, s.Length, 1000);
-            //OK
             retval = WaitStringAck(1000, "END\0");
             return retval;
         }  

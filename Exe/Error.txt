@@ -27,5 +27,7 @@ Error 25 : QueryVersionTimeOut
 Error 26 : DownloadWriteFail
 Error 27 : DownloadEndTimeOut
 Error 28 : NoDownloadBinFile
-Error 29 : TestNotComplete
-Error 30 : 1073741824
+Error 29 : CommandNoneAck
+Error 30 : CommandTimeout
+Error 31 : CheckClockOffsetFail
+Error 32 : TestNotComplete

@@ -501,6 +501,7 @@ namespace FinalTestV8
             }
             return true;
         }
+
         public static byte CheckBinaryCommand(byte[] cmd, int l)
         {
             if (l < 8)
