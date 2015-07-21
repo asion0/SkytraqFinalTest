@@ -10,41 +10,54 @@ namespace FinalTestV8
         [Flags] public enum ErrorType : ulong
         {
             NoError = 0,
-            OpenPortFail = (ulong)1 << 1,
-            ChangeBaudRateFail = (ulong)1 << 2,
-            ColdStartNack = (ulong)1 << 3,
-            ColdStartTimeOut = (ulong)1 << 4,
+            //Download Error Code
+            DownloadOpenPortFail = 1UL << 1,
+            DownloadNoDownloadBinFile = 1UL << 2,
+            DownloadBootNoNmea = 1UL << 3,
+            DownloadColdStartTimeOut = 1UL << 4,
+            DownloadLoaderDownloadFail = 1UL << 5,
+            DownloadUploadLoaderFail = 1UL << 6,
+            DownloadBinsizeCmdTimeOut = 1UL << 7,
+            DownloadWriteFail = 1UL << 8,
+            DownloadEndTimeOut = 1UL << 9,
+
+            //Test Error Code
+            TestOpenPortFail = 1UL << 33,
+            TestBootNoNmea = 1UL << 34,
+            TestColdStartTimeOut = 1UL << 35,
+            TestLoaderDownloadFail = 1UL << 36,
+            TestUploadLoaderFail = 1UL << 37,
+            TestBinsizeCmdTimeOut = 1UL << 38,
+            TestChangeBaudRateFail = 1UL << 39,
+            TestQueryRtcTimeOut = 1UL << 40,
+            TestQueryRtcNack = 1UL << 41,
+            TestCheckRtcError = 1UL << 42,
+            TestConfigMessageOutputTimeOut = 1UL << 43,
+            TestConfigNmeaOutputTimeOut = 1UL << 44,
+            TestSnrError = 1UL << 45,
+            TestQueryChannelDopplerTimeout = 1UL << 46,
+            TestQueryChannelClockOffsetTimeout = 1UL << 47,
+            TestCheckClockOffsetFail = 1UL << 48,
+            TestIoTestFail = 1UL << 49,
+            TestFactoryResetTimeOut = 1UL << 50,
+            TestCrcTimeOut = 1UL << 51,
+            TestCheckCrcError = 1UL << 52,
+            /*
             UploadEphemerisNack = (ulong)1 << 5,
             UploadEphemerisTimeout = (ulong)1 << 6,
-            ConfigMessageOutputNack = (ulong)1 << 7,
-            ConfigMessageOutputTimeOut = (ulong)1 << 8,
-            ConfigNmeaOutputNack = (ulong)1 << 9,
-            ConfigNmeaOutputTimeOut = (ulong)1 << 10,
-            FactoryResetNack = (ulong)1 << 11,
-            FactoryResetTimeOut = (ulong)1 << 12,
-            NmeaError = (ulong)1 << 13,
-            SnrError = (ulong)1 << 14,
-            QueryRtcTimeOut = 1UL << 15,
-            QueryRtcNack = 1UL << 16,
-            CheckRtcError = 1UL << 17,
-            LoaderDownloadFail = 1UL << 18,
-            UploadLoaderFail = 1UL << 19,
-            IoTestFail = 1UL << 20,
             DownloadCmdNack = 1UL << 21,
             DownloadCmdTimeOut = 1UL << 22,
-            BinsizeCmdTimeOut = 1UL << 23,
             QueryVersionNack = 1UL << 24,
             QueryVersionTimeOut = 1UL << 25,
-            DownloadWriteFail = 1UL << 26,
-            DownloadEndTimeOut = 1UL << 27,
-            NoDownloadBinFile = 1UL << 28,
             CommandNoneAck = 1UL << 29,
             CommandTimeout = 1UL << 30,
-            CheckClockOffsetFail = 1UL << 31,
+            */
 
-            TestNotComplete = (ulong)1 << 32,
+            TestNotComplete = (ulong)1 << 63,
+            //Test Error Code
+
         }
-        public const int ErrorCount = 32;
+        public const int ErrorCount = 64;
 
         public static String GetErrorString(ErrorType er)
         {

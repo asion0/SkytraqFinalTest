@@ -1,33 +1,65 @@
 Error 0 : NoError
-Error 1 : OpenPortFail
-Error 2 : ChangeBaudRateFail
-Error 3 : ColdStartNack
-Error 4 : ColdStartTimeOut
-Error 5 : UploadEphemerisNack
-Error 6 : UploadEphemerisTimeout
-Error 7 : ConfigMessageOutputNack
-Error 8 : ConfigMessageOutputTimeOut
-Error 9 : ConfigNmeaOutputNack
-Error 10 : ConfigNmeaOutputTimeOut
-Error 11 : FactoryResetNack
-Error 12 : FactoryResetTimeOut
-Error 13 : NmeaError
-Error 14 : SnrError
-Error 15 : QueryRtcTimeOut
-Error 16 : QueryRtcNack
-Error 17 : CheckRtcError
-Error 18 : LoaderDownloadFail
-Error 19 : UploadLoaderFail
-Error 20 : IoTestFail
-Error 21 : DownloadCmdNack
-Error 22 : DownloadCmdTimeOut
-Error 23 : BinsizeCmdTimeOut
-Error 24 : QueryVersionNack
-Error 25 : QueryVersionTimeOut
-Error 26 : DownloadWriteFail
-Error 27 : DownloadEndTimeOut
-Error 28 : NoDownloadBinFile
-Error 29 : CommandNoneAck
-Error 30 : CommandTimeout
-Error 31 : CheckClockOffsetFail
-Error 32 : TestNotComplete
+Error 1 : DownloadOpenPortFail
+Error 2 : DownloadNoDownloadBinFile
+Error 3 : DownloadBootNoNmea
+Error 4 : DownloadColdStartTimeOut
+Error 5 : DownloadLoaderDownloadFail
+Error 6 : DownloadUploadLoaderFail
+Error 7 : DownloadBinsizeCmdTimeOut
+Error 8 : DownloadWriteFail
+Error 9 : DownloadEndTimeOut
+Error 10 : --- Not used
+Error 11 : --- Not used
+Error 12 : --- Not used
+Error 13 : --- Not used
+Error 14 : --- Not used
+Error 15 : --- Not used
+Error 16 : --- Not used
+Error 17 : --- Not used
+Error 18 : --- Not used
+Error 19 : --- Not used
+Error 20 : --- Not used
+Error 21 : --- Not used
+Error 22 : --- Not used
+Error 23 : --- Not used
+Error 24 : --- Not used
+Error 25 : --- Not used
+Error 26 : --- Not used
+Error 27 : --- Not used
+Error 28 : --- Not used
+Error 29 : --- Not used
+Error 30 : --- Not used
+Error 31 : --- Not used
+Error 32 : --- Not used
+Error 33 : TestOpenPortFail
+Error 34 : TestBootNoNmea
+Error 35 : TestColdStartTimeOut
+Error 36 : TestLoaderDownloadFail
+Error 37 : TestUploadLoaderFail
+Error 38 : TestBinsizeCmdTimeOut
+Error 39 : TestChangeBaudRateFail
+Error 40 : TestQueryRtcTimeOut
+Error 41 : TestQueryRtcNack
+Error 42 : TestCheckRtcError
+Error 43 : TestConfigMessageOutputTimeOut
+Error 44 : TestConfigNmeaOutputTimeOut
+Error 45 : TestSnrError
+Error 46 : TestQueryChannelDopplerTimeout
+Error 47 : TestQueryChannelClockOffsetTimeout
+Error 48 : TestCheckClockOffsetFail
+Error 49 : TestIoTestFail
+Error 50 : TestFactoryResetTimeOut
+Error 51 : --- Not used
+Error 52 : --- Not used
+Error 53 : --- Not used
+Error 54 : --- Not used
+Error 55 : --- Not used
+Error 56 : --- Not used
+Error 57 : --- Not used
+Error 58 : --- Not used
+Error 59 : --- Not used
+Error 60 : --- Not used
+Error 61 : --- Not used
+Error 62 : --- Not used
+Error 63 : TestNotComplete
+Error 64 : --- Not used

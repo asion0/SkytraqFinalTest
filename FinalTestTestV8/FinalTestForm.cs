@@ -1040,11 +1040,20 @@ namespace FinalTestV8
 
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(errorFile))
             {
-                file.WriteLine("Error " + 0.ToString() + " : " + ((WorkerParam.ErrorType)((ulong)0)).ToString());
+                file.WriteLine("Error " + 0.ToString() + " : " + ((WorkerParam.ErrorType)0UL).ToString());
 
                 for (int i = 1; i <= WorkerParam.ErrorCount; i++)
                 {
-                    file.WriteLine("Error " + i.ToString() + " : " + ((WorkerParam.ErrorType)((ulong)1 << i)).ToString());
+                    string s = ((WorkerParam.ErrorType)(1UL << i)).ToString();
+                    try
+                    {
+                        Convert.ToUInt64(s);
+                        file.WriteLine("Error " + i.ToString() + " : --- Not used");
+                    }
+                    catch
+                    {
+                        file.WriteLine("Error " + i.ToString() + " : " + s);
+                    }
                 }
 
             }

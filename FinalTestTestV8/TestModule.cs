@@ -134,14 +134,14 @@ namespace FinalTestV8
             return -1;
         }
 
-        private bool OpenDevice(WorkerParam p, WorkerReportParam r, int baudIdx)
+        private bool OpenDevice(WorkerParam p, WorkerReportParam r, int baudIdx, bool testMode)
         {
             GPS_RESPONSE rep = p.gps.Open(p.comPort, baudIdx);
 
             if (GPS_RESPONSE.UART_FAIL == rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.error = (testMode) ? WorkerParam.ErrorType.TestOpenPortFail : WorkerParam.ErrorType.DownloadOpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -151,7 +151,7 @@ namespace FinalTestV8
                 if (!WaitOneNmea(p, ref timeout))
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.NmeaError;
+                    p.error = (testMode) ? WorkerParam.ErrorType.TestBootNoNmea : WorkerParam.ErrorType.DownloadBootNoNmea;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                     return false;
                 }
@@ -171,15 +171,14 @@ namespace FinalTestV8
             p.gps.Open(p.comPort, baudIdx);
         }
 
-        private bool DoColdStart(WorkerParam p, WorkerReportParam r, int retry)
+        private bool DoColdStart(WorkerParam p, WorkerReportParam r, int retry, bool testMode)
         {
             GPS_RESPONSE rep = p.gps.SendColdStart(retry, 2000);
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ColdStartNack : WorkerParam.ErrorType.ColdStartTimeOut;
+                p.error = (testMode) ? WorkerParam.ErrorType.TestColdStartTimeOut : WorkerParam.ErrorType.DownloadColdStartTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -198,9 +197,8 @@ namespace FinalTestV8
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ConfigMessageOutputNack : WorkerParam.ErrorType.ConfigMessageOutputTimeOut;
+                p.error = WorkerParam.ErrorType.TestConfigMessageOutputTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -214,9 +212,8 @@ namespace FinalTestV8
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.ConfigNmeaOutputNack : WorkerParam.ErrorType.ConfigNmeaOutputTimeOut;
+                p.error = WorkerParam.ErrorType.TestConfigNmeaOutputTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -225,6 +222,40 @@ namespace FinalTestV8
                 r.output = "Config NMEA Interval success";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
+            return true;
+        }
+        
+        private bool TestCrc(WorkerParam p, WorkerReportParam r, uint srcCrc)
+        {
+            // Test RTC
+            uint crc = 0;
+            GPS_RESPONSE rep = p.gps.QueryCrc(1000, ref crc);
+            if (GPS_RESPONSE.ACK != rep)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.TestCrcTimeOut;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                return false;
+            }
+
+            r.reportType = WorkerReportParam.ReportType.ShowProgress;
+            r.output = "FW CRC(" + crc.ToString("X") + "), ini CRC(" + srcCrc.ToString("X") + ")";
+            p.bw.ReportProgress(0, new WorkerReportParam(r));
+
+            if (srcCrc != crc)
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowError;
+                p.error = WorkerParam.ErrorType.TestCheckCrcError;
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+                return false;
+            }
+            else
+            {
+                r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                r.output = "Check crc pass";
+                p.bw.ReportProgress(0, new WorkerReportParam(r));
+            }
+
             return true;
         }
 
@@ -247,7 +278,7 @@ namespace FinalTestV8
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.TestQueryRtcNack : WorkerParam.ErrorType.TestQueryRtcTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -262,7 +293,7 @@ namespace FinalTestV8
                 if (GPS_RESPONSE.ACK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.QueryRtcNack : WorkerParam.ErrorType.QueryRtcTimeOut;
+                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.TestQueryRtcNack : WorkerParam.ErrorType.TestQueryRtcTimeOut;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                     return false;
                 }
@@ -272,7 +303,7 @@ namespace FinalTestV8
                 if ((rtc2 - rtc1) > 3 || (rtc2 - rtc1) < 1)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.CheckRtcError;
+                    p.error = WorkerParam.ErrorType.TestCheckRtcError;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                     return false;
                 }
@@ -371,7 +402,7 @@ namespace FinalTestV8
             if (!testPass)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.SnrError;
+                p.error = WorkerParam.ErrorType.TestSnrError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
             return testPass;
@@ -384,38 +415,48 @@ namespace FinalTestV8
             Int32 clkData = 0;
             Int64 clkAll = 0;
             Int64 count = 0;
-            for (byte i = 0; i < 1; ++i)
+            int tryCount = 3;
+            do
             {
-                GPS_RESPONSE rep = p.gps.QueryChannelDoppler(i, ref prn, ref freq);
-                if (GPS_RESPONSE.ACK != rep)
+                for (byte i = 0; i < 1; ++i)
                 {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.CommandNoneAck : WorkerParam.ErrorType.CommandTimeout;
+                    GPS_RESPONSE rep = p.gps.QueryChannelDoppler(i, ref prn, ref freq);
+                    if (GPS_RESPONSE.ACK != rep)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowError;
+                        p.error = WorkerParam.ErrorType.TestQueryChannelDopplerTimeout;
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                        return false;
+                    }
+
+                    if (prn == 0xFFFF || freq == 0xFFFF)
+                    {
+                        continue;
+                    }
+
+                    rep = p.gps.QueryChannelClockOffset(0, prn, 0, ref clkData);
+                    if (GPS_RESPONSE.ACK != rep)
+                    {
+                        r.reportType = WorkerReportParam.ReportType.ShowError;
+                        p.error = WorkerParam.ErrorType.TestQueryChannelClockOffsetTimeout;
+                        p.bw.ReportProgress(0, new WorkerReportParam(r));
+                        return false;
+                    }
+
+                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
+                    r.output = "No:" + i.ToString() + " Clk:" + clkData.ToString() + " Prn:" + prn.ToString();
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    return false;
+
+                    clkAll += clkData;
+                    ++count;
                 }
 
-                if (prn == 0xFFFF || freq == 0xFFFF)
+                if (count != 0)
                 {
-                    continue;
+                    break;
                 }
-
-                rep = p.gps.QueryChannelClockOffset(0, prn, 0, ref clkData);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.CommandNoneAck : WorkerParam.ErrorType.CommandTimeout;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    return false;
-                }
-
-                r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                r.output = "No:" + i.ToString() + " Clk:" + clkData.ToString() + " Prn:" + prn.ToString();
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-
-                clkAll += clkData;
-                ++count;
-            }
+                Thread.Sleep(1000);
+            } while (--tryCount > 0);
 
             if (count == 0)
             {
@@ -424,7 +465,7 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
 
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.CheckClockOffsetFail;
+                p.error = WorkerParam.ErrorType.TestCheckClockOffsetFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -437,7 +478,7 @@ namespace FinalTestV8
             if (clkPpm > 2.5 || clkPpm < -2.5)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.CheckClockOffsetFail;
+                p.error = WorkerParam.ErrorType.TestCheckClockOffsetFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -477,7 +518,7 @@ namespace FinalTestV8
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
+                p.error = WorkerParam.ErrorType.TestChangeBaudRateFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -498,7 +539,7 @@ namespace FinalTestV8
                 else
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
+                    p.error = WorkerParam.ErrorType.TestChangeBaudRateFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                     return false;
                 }
@@ -519,7 +560,7 @@ namespace FinalTestV8
             if (GPS_RESPONSE.OK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.LoaderDownloadFail;
+                p.error = WorkerParam.ErrorType.TestLoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -533,7 +574,7 @@ namespace FinalTestV8
                 if (GPS_RESPONSE.OK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.UploadLoaderFail;
+                    p.error = WorkerParam.ErrorType.TestUploadLoaderFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
                     return false;
                 }
@@ -584,7 +625,7 @@ namespace FinalTestV8
             if (!ioTestFinished || !ioTestPass)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.IoTestFail;
+                p.error = WorkerParam.ErrorType.TestIoTestFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
@@ -604,9 +645,8 @@ namespace FinalTestV8
             if (GPS_RESPONSE.ACK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.FactoryResetNack : WorkerParam.ErrorType.FactoryResetTimeOut;
+                p.error = WorkerParam.ErrorType.TestFactoryResetTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                EndProcess(p);
                 return false;
             }
             else
@@ -633,7 +673,7 @@ namespace FinalTestV8
             if (GPS_RESPONSE.UART_FAIL == rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.error = WorkerParam.ErrorType.TestOpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
 //                EndProcess(p);
                 return false;
@@ -646,7 +686,7 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
 
-            if (p.profile.v815TestColdStart == 1 && !DoColdStart(p, r, 3))
+            if (p.profile.v815TestColdStart == 1 && !DoColdStart(p, r, 3, true))
             {
                 return false;
                 /*
@@ -706,7 +746,7 @@ namespace FinalTestV8
                             {
                                 continue;
                             }
-
+                            
                             if (s.snr >= p.profile.v815SnrBoundL && s.snr <= p.profile.v815SnrBoundU)
                             {
                                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
@@ -740,7 +780,7 @@ namespace FinalTestV8
             if (!testPass)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (fixPass) ? WorkerParam.ErrorType.NmeaError : WorkerParam.ErrorType.SnrError;
+                p.error = WorkerParam.ErrorType.TestSnrError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
 //                EndProcess(p);
             }  
@@ -757,9 +797,8 @@ namespace FinalTestV8
                 if (GPS_RESPONSE.ACK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = (rep == GPS_RESPONSE.NACK) ? WorkerParam.ErrorType.FactoryResetNack : WorkerParam.ErrorType.FactoryResetTimeOut;
+                    p.error = WorkerParam.ErrorType.TestFactoryResetTimeOut;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                    EndProcess(p);
                     return false;
                 }
                 else
@@ -784,19 +823,25 @@ namespace FinalTestV8
             r.index = p.index;
 
             //20150204 - Angus changed to test in ROM mode which is in 115200 bps.
-            int baudIdx = 5;
-            if (!OpenDevice(p, r, baudIdx))
+            //int baudIdx = 5;
+            //20150615 - Angus want to test flash crc version
+            int baudIdx = GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate);
+
+            if (!OpenDevice(p, r, baudIdx, true))
             {
                 return false;
             }
 
-            if (!DoColdStart(p, r, 3))
+            if (!DoColdStart(p, r, 3, true))
             {
-//                EndProcess(p);
                 return false;
             }
 
-            //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
+            if (!TestCrc(p, r, p.fwProfile.crc))
+            {
+                return false;
+            }
+
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
                 return false;
@@ -804,22 +849,18 @@ namespace FinalTestV8
 
             if (!DoIoSrecTest(p, r, Properties.Resources.V822TesterSrec, "", 5000))
             {
-//              EndProcess(p);
                 return false;
             }
 
             ReopenDevice(p, r, baudIdx, 1000);
-
             if (!DoFactoryReset(p, r))
             {
-//             EndProcess(p);
                 return false;
             }
             
             r.reportType = WorkerReportParam.ReportType.ShowFinished;
             p.error = WorkerParam.ErrorType.NoError;
             p.bw.ReportProgress(0, new WorkerReportParam(r));
-//          EndProcess(p);
             return true;
         }
 
@@ -837,7 +878,7 @@ namespace FinalTestV8
             if (GPS_RESPONSE.UART_FAIL == rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.error = WorkerParam.ErrorType.TestOpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
 //              EndProcess(p);
                 return false;
@@ -850,7 +891,7 @@ namespace FinalTestV8
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
 
-            if (!DoColdStart(p, r, 3))
+            if (!DoColdStart(p, r, 3, true))
             {
                 return false;
             } 
@@ -927,7 +968,7 @@ namespace FinalTestV8
             if (!testPass)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = (fixPass) ? WorkerParam.ErrorType.NmeaError : WorkerParam.ErrorType.SnrError; ;
+                p.error = WorkerParam.ErrorType.TestSnrError; ;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
             else
@@ -953,86 +994,29 @@ namespace FinalTestV8
             if (p.fwProfile == null || p.fwProfile.promRaw == null)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.NoDownloadBinFile;
+                p.error = WorkerParam.ErrorType.DownloadNoDownloadBinFile;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                //EndProcess(p);
                 return false;
             }
 
-            //r.reportType = WorkerReportParam.ReportType.ShowProgress;
-            //r.output = "Scanning " + p.comPort + " baud rate...";
-            //p.bw.ReportProgress(0, new WorkerReportParam(r));
-
-            // Retry three times for disable auto uart firmware, it'll 
-            // change uart output baud rate after 5 seconds.
-            //int baudIdx = -1;
             lastDeviceBaudIdx = 5;      //V822 boot in ROM mode 115200 bps.
-            /*  //Disable scan baud rate 20150506
-            for (int i = 0; i < 3; ++i)
+            if (!OpenDevice(p, r, lastDeviceBaudIdx, false))
             {
-                baudIdx = ScanBaudRate(p, r, lastDeviceBaudIdx);
-                if (-1 != baudIdx)
-                {
-                    lastDeviceBaudIdx = baudIdx;
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Open " + p.comPort + " in " +
-                        GpsBaudRateConverter.Index2BaudRate(baudIdx).ToString() +
-                        " success.";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    break;
-                }
-                Thread.Sleep(50);
-            }
-            */
-            rep = p.gps.Open(p.comPort, lastDeviceBaudIdx);
-            if (GPS_RESPONSE.UART_OK != rep)
-            {   //This com port can't open.
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
                 return false;
             }
 
-            /*
-            if (-1 == baudIdx)
+            if (!DoColdStart(p, r, 3, false))
             {
-                r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
-                p.bw.ReportProgress(0, new WorkerReportParam(r));
-                EndProcess(p);
                 return false;
             }
-            */
-            //20150225 Always use external loader in download.
-            //20150330 Do change baud rate in loader.
-            /*
-            if (p.profile.dlBaudSel > baudIdx)
-            {
-                rep = p.gps.ChangeBaudrate((byte)p.profile.dlBaudSel, 2);
-                if (GPS_RESPONSE.ACK != rep)
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.ChangeBaudRateFail;
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                    EndProcess(p);
-                    return false;
-                }
-                else
-                {
-                    r.reportType = WorkerReportParam.ReportType.ShowProgress;
-                    r.output = "Change baud rate success";
-                    p.bw.ReportProgress(0, new WorkerReportParam(r));
-                }
-            }
-            */
+
             String dbgOutput = "";
             rep = p.gps.SendLoaderDownload(ref dbgOutput);
             if (GPS_RESPONSE.OK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.LoaderDownloadFail;
+                p.error = WorkerParam.ErrorType.DownloadLoaderDownloadFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//              EndProcess(p);
                 return false;
             }
             else
@@ -1052,16 +1036,14 @@ namespace FinalTestV8
                 if (GPS_RESPONSE.OK != rep)
                 {
                     r.reportType = WorkerReportParam.ReportType.ShowError;
-                    p.error = WorkerParam.ErrorType.UploadLoaderFail;
+                    p.error = WorkerParam.ErrorType.DownloadUploadLoaderFail;
                     p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                  EndProcess(p);
                     return false;
                 }  
 
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
                 r.output = "Upload Loader success";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                //Thread.Sleep(1000);
             }
 
             p.gps.Close();
@@ -1071,9 +1053,8 @@ namespace FinalTestV8
             if (GPS_RESPONSE.UART_FAIL == rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.OpenPortFail;
+                p.error = WorkerParam.ErrorType.DownloadOpenPortFail;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//              EndProcess(p);
                 return false;
             }
             else
@@ -1109,9 +1090,8 @@ namespace FinalTestV8
             if (GPS_RESPONSE.OK != rep)
             {
                 r.reportType = WorkerReportParam.ReportType.ShowError;
-                p.error = WorkerParam.ErrorType.BinsizeCmdTimeOut;
+                p.error = WorkerParam.ErrorType.DownloadBinsizeCmdTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//              EndProcess(p);
                 return false;
             }
             else
@@ -1157,7 +1137,6 @@ namespace FinalTestV8
                         r.reportType = WorkerReportParam.ReportType.ShowError;
                         p.error = WorkerParam.ErrorType.DownloadWriteFail;
                         p.bw.ReportProgress(0, new WorkerReportParam(r));
-//                      EndProcess(p);
                         return false;
                     }
                     r.reportType = WorkerReportParam.ReportType.ShowProgress;
@@ -1169,7 +1148,6 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowProgress;
                 r.output = "left " + lSize.ToString() + " bytes";
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-                //Thread.Sleep(100);
             }
 
             rep = p.gps.WaitStringAck(10000, "END\0");
@@ -1178,7 +1156,6 @@ namespace FinalTestV8
                 r.reportType = WorkerReportParam.ReportType.ShowError;
                 p.error = WorkerParam.ErrorType.DownloadEndTimeOut;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
-//              EndProcess(p);
                 return false;
             }
             else
@@ -1191,7 +1168,6 @@ namespace FinalTestV8
                 p.error = WorkerParam.ErrorType.NoError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
-//          EndProcess(p);
             return true;
         }
 
@@ -1205,17 +1181,17 @@ namespace FinalTestV8
             sw.Start();
             int baudIdx = GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate);
 
-            if (!OpenDevice(p, r, baudIdx))
+            if (!OpenDevice(p, r, baudIdx, true))
+            {
+                return false;
+            }
+
+            if (!DoColdStart(p, r, 3, true))
             {
                 return false;
             }
 
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
-            {
-                return false;
-            }
-
-            if (!DoColdStart(p, r, 3))
             {
                 return false;
             }
@@ -1268,46 +1244,39 @@ namespace FinalTestV8
             sw.Start();
             int baudIdx = GpsBaudRateConverter.BaudRate2Index(p.fwProfile.dvBaudRate);
 
-            if (!OpenDevice(p, r, baudIdx))
+            if (!OpenDevice(p, r, baudIdx, true))
             {
                 return false;
             }
 
-            if (!DoColdStart(p, r, 3))
+            if (!DoColdStart(p, r, 3, true))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!TestRtc(p, r))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!DoNmeaPrepareCommand(p, r))
             {
-//                EndProcess(p);
                 return false;
             }
 
             bool testPass = TestSnr(p, r, ref sw, p.profile.v838SnrBoundL, p.profile.v838SnrBoundU, p.profile.v838TestDuration * 1000);
             if (!testPass)
             {
-//                EndProcess(p);
                 return false;
             }
 
-            //if (p.profile.dlBaudSel > baudIdx && !BoostBaudRate(p, r, p.profile.dlBaudSel))
             if (baudIdx < 5 && !BoostBaudRate(p, r, ioTestBaud))
             {
-//                EndProcess(p);
                 return false;
             }
 
             if (!DoIoSrecTest(p, r, Properties.Resources.IoTesterSrec, "TEST01 = 0001 000F 0119 1C1D 0C0D 0E16 0809 151B 100F 1406 0002 181A 1807 0B0A 0B17 031E 031F ", 5000))
             {
-//                EndProcess(p);
                 return false;
             }
 
@@ -1315,7 +1284,6 @@ namespace FinalTestV8
 
             if (!DoFactoryReset(p, r))
             {
-                //EndProcess(p);
                 return false;
             }
 
@@ -1325,8 +1293,6 @@ namespace FinalTestV8
                 p.error = WorkerParam.ErrorType.NoError;
                 p.bw.ReportProgress(0, new WorkerReportParam(r));
             }
-
-            //EndProcess(p);
             return true;
         }
 

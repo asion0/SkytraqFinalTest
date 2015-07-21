@@ -62,6 +62,8 @@ using System.Runtime.InteropServices;
 // 1.0.0.032 - Add wait NMEA after change baud rate.
 // 1.0.0.033 - Support clock offset test in V828
 // 1.0.0.034 - Modify V828 Test flow.
+// 1.0.0.035 - Change error code, modify test clock offset and modify v828download flow.
+// 1.0.0.035 - Add V822 TestCRC function.
 
-[assembly: AssemblyVersion("1.0.0.034")]
-[assembly: AssemblyFileVersion("1.0.0.034")]
+[assembly: AssemblyVersion("1.0.0.036")]
+[assembly: AssemblyFileVersion("1.0.0.036")]
